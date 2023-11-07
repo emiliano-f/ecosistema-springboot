@@ -25,7 +25,7 @@ public class AuthController {
     private Environment env;
     @GetMapping("/login")
     public ResponseEntity<String> login(@RequestParam String googleId, @RequestParam String email, @RequestParam String nombre) {
-       //Usuario creado por Cordoba.
+       //Usuario creado por Cordoba.    
         Optional<Usuario> existingUser = usuarioRepository.findByEmail(email);
 
         if (existingUser.isPresent()) {
