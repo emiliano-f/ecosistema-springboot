@@ -1,11 +1,9 @@
 package semillero.ecosistema.entities;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import semillero.ecosistema.enumerations.UserRol;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -16,7 +14,9 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import semillero.ecosistema.enumerations.UserRol;
 
 @Entity
 @Getter @Setter
@@ -27,15 +27,15 @@ public class User {
     private Long id;
 
     @NotBlank(message = "Name may not be blank")
-    @Column(name = "name", nullable = false)
-    private String nombre;
+    @NotNull
+    private String name;
 
     @NotBlank(message = "Last name may not be blank")
-    @Column(name = "last_name", nullable = false)
-    private String apellido;
+    @NotNull
+    private String last_name;
 
     @Email
-    @Column(name = "email", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     private String email;
 
     @Basic
@@ -48,6 +48,6 @@ public class User {
     private UserRol rol;
 
     @NotBlank(message = "Phone may not be blank")
-    @Column(name = "phone", nullable = false)
-    private String telefono;
+    @NotNull
+    private String phone;
 }
