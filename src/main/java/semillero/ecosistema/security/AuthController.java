@@ -10,56 +10,57 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import semillero.ecosistema.entities.User;
+import semillero.ecosistema.repositories.UserRepository;
 
 import java.util.Date;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/auth")
 public class AuthController {
     @Autowired
-    private Usuario.UsuarioRepository usuarioRepository; //Zair.
+    private UserRepository userRepository;
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;
     @Autowired
     private Environment env;
     @GetMapping("/login")
-    public ResponseEntity<String> login(@RequestParam String googleId, @RequestParam String email, @RequestParam String nombre) {
-       //Usuario creado por Cordoba.
-        Optional<Usuario> existingUser = usuarioRepository.findByEmail(email);
+    public ResponseEntity<String> login(@RequestParam String email) {
+        Optional<User> existingUser = userRepository.findByEmail(email);
 
         if (existingUser.isPresent()) {
-            // El usuario ya existe, autenticar y generar un token
-            Usuario usuario = existingUser.get();
-            String token = generateToken(usuario);
+            User user = existingUser.get();
+            String token = generateToken(user);
 
             return ResponseEntity.ok(token);
         } else {
-            //Service de zair.
-            UserService userService = new UserService();
-            userService.createUser();
+            User newUser = new User();
+            try {
+                userRepository.save(newUser);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
 
+            String token = generateToken(newUser);
             return ResponseEntity.ok(token);
-
         }
     }
 
-    private String generateToken(Usuario usuario) {
-        Date ahora = new Date();
-        Date expiracion = new Date(ahora.getTime() + 3600000); // Token válido por 1 hora
+    private String generateToken(User usuario) {
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + 3600000);
 
-        String token = Jwts.builder()
-                //agregar rol (USER O ADMIN)
+        String token;
+        token = Jwts.builder()
                 .setSubject(Long.toString(usuario.getId()))
                 .claim("email", usuario.getEmail())
-                .claim("nombre", usuario.getNombre())
-                .setIssuedAt(ahora)
-                .setExpiration(expiracion)
+                .claim("nombre", usuario.getName())
+                .setIssuedAt(now)
+                .setExpiration(expiration)
                 .signWith(SignatureAlgorithm.HS256, env.getProperty("jwt.secret"))
                 .compact();
 
         return token;
     }
 }
-
-
