@@ -3,6 +3,7 @@ package semillero.ecosistema.services;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import semillero.ecosistema.dtos.UserDTO;
 import semillero.ecosistema.entities.User;
 import semillero.ecosistema.enumerations.UserRol;
 import semillero.ecosistema.repositories.UserRepository;
@@ -52,6 +53,30 @@ public class UserService {
             user.setDeleted(true);
 
             userRepository.save(user);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+//    public User findByEmail(String email) throws Exception{
+//        try {
+//            User user = userRepository.findByEmail(email)
+//                    .orElseThrow(() -> new Exception("User with email " + email + "not found"));
+//
+//            return user;
+//        } catch (Exception e) {
+//            throw new Exception(e.getMessage());
+//        }
+//    }
+
+    public UserDTO findByEmail(String email) throws Exception{
+
+        try {
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new Exception("User with email " + email + "not found"));
+            UserDTO userDto = new UserDTO();
+            userDto.setEmail(user.getEmail());
+            return user;
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
