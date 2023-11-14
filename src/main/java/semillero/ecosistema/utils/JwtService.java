@@ -18,8 +18,8 @@ public class JwtService {
         Date now = new Date(System.currentTimeMillis());
         Date expireDate = new Date(System.currentTimeMillis() + EXPIRATION);
 
-        String fullName = user.getName() + " " +user.getLast_name();
-        String role = user.getRol().toString();
+        String fullName = user.getName() + " " +user.getLastName();
+        String role = user.getRole().toString();
         Long id = user.getId();
         return Jwts.builder()
                 .setSubject(user.getEmail())

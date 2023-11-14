@@ -16,26 +16,29 @@ import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import semillero.ecosistema.enumerations.UserRol;
+import semillero.ecosistema.enumerations.UserRole;
 
 @Entity
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Name may not be blank")
     @NotNull
+    @NotBlank(message = "Name may not be blank")
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @NotBlank(message = "Last name may not be blank")
     @NotNull
-    private String last_name;
+    @NotBlank(message = "Last name may not be blank")
+    @Column(name = "last_name", nullable = false)
+    private String lastName;
 
     @Email
-    @Column(nullable = false, unique = true)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @Basic
@@ -45,9 +48,11 @@ public class User {
 
     @NotNull
     @Enumerated(EnumType.STRING)
-    private UserRol rol;
+    @Column(name = "role", nullable = false)
+    private UserRole role;
 
-//    @NotBlank(message = "Phone may not be blank")
-//    @NotNull
+    //@NotNull
+    //@NotBlank(message = "Phone may not be blank")
+    @Column(name = "phone", nullable = true)
     private String phone;
 }

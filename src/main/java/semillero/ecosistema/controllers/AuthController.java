@@ -29,14 +29,11 @@ public class AuthController {
     @Autowired
     private JwtService jwtService;
 
-
-    @PostMapping("/login")
+    @PostMapping("/googleAuth")
     public ResponseEntity<?> authWithGoogle(@RequestParam Map<String, String> playload) throws GeneralSecurityException, IOException {
         String googleTokenId = playload.get("tokenId");
-
         try {
-
-            if (googleTokenId == null || googleTokenId.isEmpty())  {
+            if (googleTokenId == null || googleTokenId.isEmpty()) {
                 throw new Exception("El token no fue proporcionado");
             }
 
@@ -46,34 +43,29 @@ public class AuthController {
             GoogleIdToken idToken = verifier.verify(googleTokenId);
 
 
-                GoogleIdToken.Payload googleUserPayload = idToken.getPayload();
-                System.out.println(googleUserPayload);
-                // Get profile information from payload
+            GoogleIdToken.Payload googleUserPayload = idToken.getPayload();
+            System.out.println(googleUserPayload); //Para sacar despues de probar
 
-                String email = googleUserPayload.getEmail();
-                String name = (String) googleUserPayload.get("given_name");
-                String lastName = (String) googleUserPayload.get("family_name");
+            String email = googleUserPayload.getEmail();
+            String name = (String) googleUserPayload.get("given_name");
+            String lastName = (String) googleUserPayload.get("family_name");
 
-                // Print user identifier
-                String userId = googleUserPayload.getSubject();
-                System.out.println("User ID: " + userId);
+            String userId = googleUserPayload.getSubject();
+            System.out.println("User ID: " + userId); //Para sacar despues de probar
 
-                //Crear usuario si no existe
-                User user = null;
-                //Rol
-                //Asignar token
-                String userJwtToken = jwtService.generateTokenForUser(user);
-                //Respuesta
-                Map<String, Object> responseData = new HashMap<>();
-                responseData.put("token", userJwtToken);
-                responseData.put("userName", name);
-                responseData.put("email", email);
+            User user = userService.saveOrUpdate(email, name, lastName);
 
+            String userJwtToken = jwtService.generateTokenForUser(user);
 
-                return ResponseEntity.ok(responseData);
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("token", userJwtToken);
+            responseData.put("userName", name);
+            responseData.put("email", email);
+
+            return ResponseEntity.ok(responseData);
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("El token no fue proporcionado");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }
 }
