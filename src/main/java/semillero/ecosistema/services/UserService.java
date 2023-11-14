@@ -1,21 +1,10 @@
 package semillero.ecosistema.services;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Service;
 import semillero.ecosistema.entities.User;
 import semillero.ecosistema.enumerations.UserRol;
 import semillero.ecosistema.repositories.UserRepository;
-import semillero.ecosistema.security.JwtProperties;
-
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
 @Service
 public class UserService {
 
@@ -65,40 +54,4 @@ public class UserService {
             throw new Exception(e.getMessage());
         }
     }
-
-    public User findByEmail(String email) throws Exception {
-        try {
-            Optional<User> user = userRepository.findByEmail(email);
-            return user.get();
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-    }
-
-    // crear metodo para crearOActualizado
-    public void createOrUpdate(String email){
-         User user = userRepository.findByEmail(email).orElse(new User());
-
-    }
-
-
-    //Sacar a la carpeta UTILS
-    @Autowired
-    JwtProperties jwtProperties;
-    public String generateTokenForUser(String email, String name, UserRol role){
-        Date now = new Date();
-        Date expireDate = (new Date(now.getTime() + jwtProperties.getValidityInMs()));
-
-        String addToName = "NAME="+ name;
-        String rol = role.toString();
-        return Jwts.builder()
-                .setSubject(email)
-                .claim("name", addToName)
-                .claim("ROL_", rol)
-                .setIssuedAt(now)
-                .setExpiration(expireDate)
-                .signWith(SignatureAlgorithm.HS256, jwtProperties.getSecretKey())
-                .compact();
-    }
-
 }
