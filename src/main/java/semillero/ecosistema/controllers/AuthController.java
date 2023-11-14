@@ -2,24 +2,22 @@ package semillero.ecosistema.controllers;
 
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.gson.GsonFactory;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import semillero.ecosistema.entities.User;
 import semillero.ecosistema.dtos.UserDTO;
+import semillero.ecosistema.entities.User;
 import semillero.ecosistema.services.UserService;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -38,54 +36,56 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<?> authWithGoogle(@RequestParam Map<String, String> playload) throws GeneralSecurityException, IOException {
-        try {
-            String googleTokenId = playload.get("tokenId");
+        String googleTokenId = playload.get("tokenId");
 
-            if (googleTokenId == null || googleTokenId.isEmpty()) {
-                return ResponseEntity.badRequest().body("El token no fue proporcionado");
+        try {
+
+            if (googleTokenId == null || googleTokenId.isEmpty())  {
+                throw new Exception("El token no fue proporcionado");
             }
+
             GoogleIdTokenVerifier verifier =
                     new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory()).build();
 
             GoogleIdToken idToken = verifier.verify(googleTokenId);
 
-            if (idToken != null) {
+
                 GoogleIdToken.Payload googleUserPayload = idToken.getPayload();
+                System.out.println(googleUserPayload);
+                // Get profile information from payload
+
+                String email = googleUserPayload.getEmail();
+                String name = (String) googleUserPayload.get("given_name");
+                String lastName = (String) googleUserPayload.get("family_name");
+
                 // Print user identifier
                 String userId = googleUserPayload.getSubject();
                 System.out.println("User ID: " + userId);
-                // Get profile information from payload
-                String email = googleUserPayload.getEmail();
-                String name = (String) googleUserPayload.get("name");
-                String pictureUrl = (String) googleUserPayload.get("picture");
 
-            } else {
-                System.out.println("Invalid ID token.");
-            }
+                //Crear usuario si no existe
+                User user = userService.findByEmail(email);
 
+                if (user == null) {
+                    User newUser = new User();
+                    newUser.setName(name);
+                    newUser.setEmail(email);
+
+                    userService.save(newUser);
+                }
+                //Rol
+                //Asignar token
+                String userJwtToken = userService.generateTokenForUser(email, name, user.getRol());
+                //Respuesta
+                Map<String, Object> responseData = new HashMap<>();
+                responseData.put("token", userJwtToken);
+                responseData.put("userName", name);
+                responseData.put("email", email);
+
+                return ResponseEntity.ok(responseData);
 
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"error\": \"An error occurred while processing the request.\"}");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("El token no fue proporcionado");
         }
-
-    }
-
-    private String generateToken(User usuario) {
-        Date now = new Date();
-        Date expiration = new Date(now.getTime() + 3600000);
-
-        String token;
-        token = Jwts.builder()
-                .setSubject(Long.toString(usuario.getId()))
-                .claim("email", usuario.getEmail())
-                .claim("nombre", usuario.getName())
-                .setIssuedAt(now)
-                .setExpiration(expiration)
-                .signWith(SignatureAlgorithm.HS256, jwtSecret)
-                .compact();
-
-        return token;
     }
 
     @GetMapping("/user/me")
@@ -104,4 +104,3 @@ public class AuthController {
         }
     }
 }
-

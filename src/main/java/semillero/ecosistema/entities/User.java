@@ -47,7 +47,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRol rol;
 
-    @NotBlank(message = "Phone may not be blank")
-    @NotNull
+//    @NotBlank(message = "Phone may not be blank")
+//    @NotNull
     private String phone;
 }
