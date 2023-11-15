@@ -6,6 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import semillero.ecosistema.entities.User;
 import semillero.ecosistema.services.UserService;
@@ -31,6 +34,7 @@ public class AuthController {
 
     @PostMapping("/googleAuth")
     public ResponseEntity<?> authWithGoogle(@RequestParam Map<String, String> playload) throws GeneralSecurityException, IOException {
+
         String googleTokenId = playload.get("tokenId");
         try {
             if (googleTokenId == null || googleTokenId.isEmpty()) {
@@ -42,6 +46,9 @@ public class AuthController {
 
             GoogleIdToken idToken = verifier.verify(googleTokenId);
 
+            if (idToken == null){
+                throw new Exception("El token de Google no es válido");
+            }
 
             GoogleIdToken.Payload googleUserPayload = idToken.getPayload();
             System.out.println(googleUserPayload); //Para sacar despues de probar
@@ -55,12 +62,19 @@ public class AuthController {
 
             User user = userService.saveOrUpdate(email, name, lastName);
 
+            UserDetails userDetails = null;
+
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
             String userJwtToken = jwtService.generateTokenForUser(user);
 
             Map<String, Object> responseData = new HashMap<>();
             responseData.put("token", userJwtToken);
-            responseData.put("userName", name);
-            responseData.put("email", email);
+            responseData.put("userDetails", userDetails);
+            responseData.put("authenticationToken", authenticationToken);
 
             return ResponseEntity.ok(responseData);
 
