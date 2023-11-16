@@ -1,6 +1,10 @@
 package semillero.ecosistema.services;
+
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import semillero.ecosistema.entities.User;
 import semillero.ecosistema.enumerations.UserRole;
@@ -9,10 +13,28 @@ import semillero.ecosistema.repositories.UserRepository;
 import java.util.Optional;
 
 @Service
-public class UserService {
+public class UserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
+
+    /**
+     * Carga los detalles de un usuario por su nombre de usuario (en este caso, el correo electrónico).
+     * @param username El nombre de usuario (correo electrónico) del usuario.
+     * @return UserDetails que representa los detalles del usuario.
+     * @throws UsernameNotFoundException Si no se encuentra un usuario con el correo electrónico proporcionado.
+     */
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getUsername(),
+                "",
+                user.getAuthorities()
+        );
+    }
 
     /**
      * Método para guardar un usuario en la base de datos.

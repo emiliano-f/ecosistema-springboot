@@ -22,10 +22,10 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import semillero.ecosistema.utils.JwtService;
 
-
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("api/auth")
 public class AuthController {
+
     @Autowired
     private UserService userService;
 
@@ -33,53 +33,55 @@ public class AuthController {
     private JwtService jwtService;
 
     @PostMapping("/googleAuth")
-    public ResponseEntity<?> authWithGoogle(@RequestParam Map<String, String> playload) throws GeneralSecurityException, IOException {
-
-        String googleTokenId = playload.get("tokenId");
+    public ResponseEntity<?> authWithGoogle(@RequestParam Map<String, String> payload) throws GeneralSecurityException, IOException {
         try {
+            // Verificar el token recibido
+            String googleTokenId = payload.get("tokenId");
+
             if (googleTokenId == null || googleTokenId.isEmpty()) {
                 throw new Exception("El token no fue proporcionado");
             }
 
+            // Verificar la validez del token de Google
             GoogleIdTokenVerifier verifier =
                     new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory()).build();
 
             GoogleIdToken idToken = verifier.verify(googleTokenId);
 
-            if (idToken == null){
+            if (idToken == null) {
                 throw new Exception("El token de Google no es válido");
             }
 
+            // Obtener datos del usuario de Google
             GoogleIdToken.Payload googleUserPayload = idToken.getPayload();
-            System.out.println(googleUserPayload); //Para sacar despues de probar
 
             String email = googleUserPayload.getEmail();
             String name = (String) googleUserPayload.get("given_name");
             String lastName = (String) googleUserPayload.get("family_name");
 
-            String userId = googleUserPayload.getSubject();
-            System.out.println("User ID: " + userId); //Para sacar despues de probar
-
+            // Manejar la información del usuario en la base de datos
             User user = userService.saveOrUpdate(email, name, lastName);
 
-            UserDetails userDetails = null;
+            // Autenticar al usuario en Spring Security
+            UserDetails userDetails = userService.loadUserByUsername(email);
 
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
+            // Generar el token JWT
             String userJwtToken = jwtService.generateTokenForUser(user);
 
+            // Crear un JSON con el token JWT y datos del usuario
             Map<String, Object> responseData = new HashMap<>();
             responseData.put("token", userJwtToken);
             responseData.put("userDetails", userDetails);
             responseData.put("authenticationToken", authenticationToken);
 
             return ResponseEntity.ok(responseData);
-
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("{\"error\": \"Token inválido.\"}");
         }
     }
 }

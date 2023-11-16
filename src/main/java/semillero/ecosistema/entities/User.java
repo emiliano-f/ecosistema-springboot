@@ -62,6 +62,10 @@ public class User implements UserDetails {
     @Column(name = "phone", nullable = true)
     private String phone;
 
+    public String getFullName() {
+        return name + " " + lastName;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority(role.name()));
