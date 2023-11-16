@@ -58,6 +58,7 @@ public class AuthController {
             String email = googleUserPayload.getEmail();
             String name = (String) googleUserPayload.get("given_name");
             String lastName = (String) googleUserPayload.get("family_name");
+            String picture = (String) googleUserPayload.get("picture");
 
             // Manejar la información del usuario en la base de datos
             User user = userService.saveOrUpdate(email, name, lastName);
@@ -71,7 +72,7 @@ public class AuthController {
             SecurityContextHolder.getContext().setAuthentication(authenticationToken);
 
             // Generar el token JWT
-            String userJwtToken = jwtService.generateTokenForUser(user);
+            String userJwtToken = jwtService.generateTokenForUser(user, picture);
 
             // Crear un JSON con el token JWT y datos del usuario
             Map<String, Object> responseData = new HashMap<>();

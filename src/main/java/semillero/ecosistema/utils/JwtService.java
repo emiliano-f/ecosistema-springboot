@@ -17,11 +17,11 @@ public class JwtService {
     private String JWT_SECRET_KEY;
     private static final long EXPIRATION = 604800000L; // 7 days
 
-    public String generateTokenForUser(User user) {
+    public String generateTokenForUser(User user, String picture) {
         Date issuedAt = new Date(System.currentTimeMillis());
         Date expiration = new Date(System.currentTimeMillis() + EXPIRATION);
 
-        Map<String, Object> claims = genereteClaims(user);
+        Map<String, Object> claims = genereteClaims(user, picture);
 
         return Jwts.builder()
                 .setSubject(user.getEmail())
@@ -32,11 +32,13 @@ public class JwtService {
                 .compact();
     }
 
-    private Map<String, Object> genereteClaims (User user) {
+    private Map<String, Object> genereteClaims (User user, String picture) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("name", user.getFullName());
         claims.put("role", user.getRole().name());
         claims.put("id", user.getId());
+        claims.put("picture", picture);
+
 
         return claims;
     }
