@@ -8,12 +8,16 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import semillero.ecosistema.services.UserService;
 
 import java.io.IOException;
 import java.util.List;
@@ -24,22 +28,29 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Value("${jwt.secret}")
     private String JWT_SECRET_KEY;
 
+    @Autowired
+    private UserService userService;
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
+            //
             if (request.getServletPath().contains("/api/auth")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
+            //
             String token = extractToken(request, response, filterChain);
 
             if (token == null) return;
 
-            Claims claims = processToken(token);
+            //
+            String username = extractUsernameFromToken(token);
 
-            setAuthentication(claims);
+            //
+            setAuthentication(request, username);
 
             filterChain.doFilter(request, response);
         } catch (MalformedJwtException e) {
@@ -58,7 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return null;
         }
 
-        return header.substring(7);
+        return header.replace("Bearer ", "");
     }
 
     private Claims processToken(String token) {
@@ -68,21 +79,20 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 .getBody();
     }
 
-    private void setAuthentication(Claims claims) {
-        if (claims.getSubject() != null) {
-            Object claimsAuthorities = claims.get("authorities");
+    private String extractUsernameFromToken(String token) {
+        Claims claims = processToken(token);
+        return claims.getSubject();
+    }
 
-            if (claimsAuthorities instanceof List<?> list) {
-                List<SimpleGrantedAuthority> authorities = list.stream()
-                        .filter(authority -> authority instanceof String)
-                        .map(authority -> new SimpleGrantedAuthority((String) authority))
-                        .toList();
+    private void setAuthentication(HttpServletRequest request, String username) {
+        if (username != null & SecurityContextHolder.getContext().getAuthentication() == null) {
+            UserDetails userDetails = null;
 
-                UsernamePasswordAuthenticationToken authenticationToken =
-                        new UsernamePasswordAuthenticationToken(claims.getSubject(), null, authorities);
+            UsernamePasswordAuthenticationToken authenticationToken =
+                    new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+            authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-            }
+            SecurityContextHolder.getContext().setAuthentication(authenticationToken);
         }
     }
 
