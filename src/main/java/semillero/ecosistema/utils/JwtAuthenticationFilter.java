@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -20,7 +19,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import semillero.ecosistema.services.UserService;
 
 import java.io.IOException;
-import java.util.List;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -35,23 +33,24 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            //
+            // Verifica si la solicitud está relacionada con la autenticación y, en ese caso, permite el paso sin validar el token
             if (request.getServletPath().contains("/api/auth")) {
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            //
+            // Extrae el token JWT del encabezado de autorización de la solicitud
             String token = extractToken(request, response, filterChain);
 
             if (token == null) return;
 
-            //
+            // Extrae el nombre de usuario (email) del token JWT.
             String username = extractUsernameFromToken(token);
 
-            //
+            // Configura la autenticación en el contexto de seguridad de Spring
             setAuthentication(request, username);
 
+            // Permite que la solicitud continúe su procesamiento
             filterChain.doFilter(request, response);
         } catch (MalformedJwtException e) {
             handleTokenError(response, "Malformed JWT: " + e.getMessage());
@@ -86,7 +85,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void setAuthentication(HttpServletRequest request, String username) {
         if (username != null & SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = null;
+            UserDetails userDetails = userService.loadUserByUsername(username);
 
             UsernamePasswordAuthenticationToken authenticationToken =
                     new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
