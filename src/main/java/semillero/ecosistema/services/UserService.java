@@ -92,13 +92,22 @@ public class UserService implements UserDetailsService {
     public User saveOrUpdate(String email, String name, String lastName) throws Exception {
         try {
             Optional<User> optional = userRepository.findByEmail(email);
-            User user = optional.orElseGet(User::new);
+            User user;
+
+            if (optional.isEmpty()) {
+                // Nuevo usuario, asignamos el rol de usuario
+                user = new User();
+
+                user.setDeleted(false);
+                user.setRole(UserRole.USUARIO_REGULAR);
+            } else {
+                // Usuario existente, conservamos el rol actual
+                user = optional.get();
+            }
 
             user.setName(name);
             user.setLastName(lastName);
             user.setEmail(email);
-            user.setDeleted(false);
-            user.setRole(UserRole.USUARIO_REGULAR);
 
             return userRepository.save(user);
         } catch (Exception e) {
