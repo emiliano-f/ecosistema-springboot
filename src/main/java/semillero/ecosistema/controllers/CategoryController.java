@@ -18,7 +18,7 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @PostMapping("/save")
+    @PostMapping("")
     public ResponseEntity<?> saveCategory(@Valid @RequestBody Category category) {
         try {
             Category savedCategory = categoryService.save(category);
@@ -30,7 +30,7 @@ public class CategoryController {
         }
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(@Valid @RequestBody Category category, @PathVariable Long id) {
         try {
             Category updateCategory = categoryService.update(id, category);
@@ -41,7 +41,7 @@ public class CategoryController {
         }
     }
 
-    @DeleteMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
         try {
             categoryService.delete(id);
@@ -52,7 +52,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping("/allCategories")
+    @GetMapping("")
     public ResponseEntity<?> findAllCategories() {
         try {
             List<Category> categories = categoryService.findAllCategories();
@@ -63,7 +63,7 @@ public class CategoryController {
         }
     }
 
-    @GetMapping("/category/{id}")
+    @GetMapping("/{id}")
     public ResponseEntity<?> findCategoryById(@PathVariable Long id){
         try {
             Optional<Category> categoryById = categoryService.findById(id);
