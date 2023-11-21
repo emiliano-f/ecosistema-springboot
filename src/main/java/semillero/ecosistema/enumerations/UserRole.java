@@ -1,6 +1,6 @@
 package semillero.ecosistema.enumerations;
 
-public enum UserRol {
+public enum UserRole {
     ADMINISTRADOR,
     USUARIO_REGULAR
 }
