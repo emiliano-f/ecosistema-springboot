@@ -1,5 +1,6 @@
 package semillero.ecosistema.entities;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +27,7 @@ public class Country {
     private String name;
 
     @OneToMany(mappedBy = "country", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Province> provinces;
 
 }

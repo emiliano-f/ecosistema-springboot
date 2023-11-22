@@ -1,5 +1,6 @@
 package semillero.ecosistema.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,7 @@ public class Province {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "country_id")
+    @JsonBackReference
     private Country country;
 
 }
