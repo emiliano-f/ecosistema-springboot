@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import semillero.ecosistema.dtos.supplier.SupplierRequestDTO;
 import semillero.ecosistema.entities.*;
 import semillero.ecosistema.enumerations.SupplierStatus;
+import semillero.ecosistema.exceptions.MaxSuppliersReachedException;
 import semillero.ecosistema.mappers.SupplierMapper;
 import semillero.ecosistema.repositories.*;
 
@@ -40,9 +41,13 @@ public class SupplierService {
         try {
             Supplier supplier = supplierMapper.toEntity(dto);
 
-            // Establecer valores por defecto
-            supplier.setDeleted(false);
-            supplier.setStatus(SupplierStatus.REVISION_NICIAL);
+            // Validar que el Usuario no tenga más de 3 Proveedores
+            User user = userRepository.findById(dto.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
+            Long numberOfSuppliers = supplierRepository.countByUser(user);
+            if (numberOfSuppliers >= 3) {
+                throw new MaxSuppliersReachedException("The user already has the maximum number of providers allowed (3)");
+            }
 
             // Establecer relaciones
             Country country = countryRepository.findById(dto.getCountryId())
@@ -51,8 +56,6 @@ public class SupplierService {
                     .orElseThrow(() -> new IllegalArgumentException("Province not found with id: " + dto.getProvinceId()));
             Category category = categoryRepository.findById(dto.getCategoryId())
                     .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.getCategoryId()));
-            User user = userRepository.findById(dto.getUserId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
 
             // Asignar relaciones a la entidad Supplier
             supplier.setCountry(country);
@@ -60,7 +63,13 @@ public class SupplierService {
             supplier.setCategory(category);
             supplier.setUser(user);
 
+            // Establecer valores por defecto
+            supplier.setDeleted(false);
+            supplier.setStatus(SupplierStatus.REVISION_NICIAL);
+
             return supplierRepository.save(supplier);
+        } catch (MaxSuppliersReachedException e) {
+            throw new MaxSuppliersReachedException(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
@@ -96,7 +105,7 @@ public class SupplierService {
 
             return supplierRepository.save(supplier);
         } catch (NoSuchElementException e) {
-            throw new NoSuchElementException(e.getMessage());
+            throw new Exception(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

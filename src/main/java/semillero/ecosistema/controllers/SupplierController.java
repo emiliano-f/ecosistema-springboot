@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import semillero.ecosistema.dtos.supplier.SupplierRequestDTO;
+import semillero.ecosistema.exceptions.MaxSuppliersReachedException;
 import semillero.ecosistema.services.SupplierService;
 
 import java.util.NoSuchElementException;
@@ -23,6 +24,9 @@ public class SupplierController {
         try {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(service.save(dto));
+        } catch (MaxSuppliersReachedException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"El Usuario ya tiene 3 Proveedores.\"}");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"error\": \"Error al crear el Proveedor.\"}");
