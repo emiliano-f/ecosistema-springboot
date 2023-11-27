@@ -34,6 +34,22 @@ public class SupplierService {
     @Autowired
     private SupplierMapper supplierMapper;
 
+    public List<Supplier> findAll() throws Exception {
+        try {
+            return supplierRepository.findAll();
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    public List<Supplier> findAllAccepted() throws Exception {
+        try {
+            return supplierRepository.findAllByStatusAndDeleted(SupplierStatus.ACEPTADO, false);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
     public List<Supplier> findAllByName(String name) throws Exception {
         try {
             if (name == null || name.trim().isEmpty()) {
@@ -44,6 +60,29 @@ public class SupplierService {
 
             if (suppliers.isEmpty()) {
                 throw new EntityNotFoundException("Supplier not found with name: " + name);
+            }
+
+            return suppliers;
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    public List<Supplier> findAllAcceptedByCategory(String categoryName) throws Exception {
+        try {
+            Category category = categoryRepository.findByNameContainingIgnoreCase(categoryName);
+
+            if (category == null) {
+                throw new IllegalArgumentException("Category not found with name: " + categoryName);
+            }
+
+            List<Supplier> suppliers = supplierRepository
+                    .findAllByCategoryAndStatusAndDeleted(category, SupplierStatus.ACEPTADO, false);
+
+            if (suppliers.isEmpty()) {
+                throw new EntityNotFoundException("Supplier not found with category: " + categoryName);
             }
 
             return suppliers;

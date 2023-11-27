@@ -17,6 +17,28 @@ public class SupplierController {
     @Autowired
     private SupplierService service;
 
+    @GetMapping("")
+    public ResponseEntity<?> getAll() {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findAll());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
+    @GetMapping("/allAccepted")
+    public ResponseEntity<?> getAllAccepted()  {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findAllAccepted());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
     @GetMapping("/searchByName")
     public ResponseEntity<?> getAllByName(@RequestParam(name = "name", required = true) String name) {
         try {
@@ -28,6 +50,23 @@ public class SupplierController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("{\"error\": \"Proveedor no encontrados con nombre " + name + ".\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
+    @GetMapping("/searchByCategory")
+    public ResponseEntity<?> getAllAcceptedByCategory(@RequestParam(name = "category", required = true) String category)  {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findAllAcceptedByCategory(category));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"Categoria no encontrada.\"}");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Proveedor no encontrados con categoria " + category + ".\"}");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("{\"error\": \"Error Interno del Servidor.\"}");
