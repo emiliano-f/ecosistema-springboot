@@ -41,6 +41,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/countries/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/provinces/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/suppliers/searchByName").permitAll()
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors

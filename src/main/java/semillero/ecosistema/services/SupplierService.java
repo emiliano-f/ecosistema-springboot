@@ -1,5 +1,6 @@
 package semillero.ecosistema.services;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,9 +12,6 @@ import semillero.ecosistema.mappers.SupplierMapper;
 import semillero.ecosistema.repositories.*;
 
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @Service
 public class SupplierService {
@@ -35,6 +33,26 @@ public class SupplierService {
 
     @Autowired
     private SupplierMapper supplierMapper;
+
+    public List<Supplier> findAllByName(String name) throws Exception {
+        try {
+            if (name == null || name.trim().isEmpty()) {
+                throw new IllegalArgumentException("The query cannot be empty.");
+            }
+
+            List<Supplier> suppliers = supplierRepository.findAllByNameContainingIgnoreCase(name);
+
+            if (suppliers.isEmpty()) {
+                throw new EntityNotFoundException("Supplier not found with name: " + name);
+            }
+
+            return suppliers;
+        } catch (IllegalArgumentException | EntityNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
 
     @Transactional
     public Supplier save(SupplierRequestDTO dto) throws Exception {
@@ -79,7 +97,7 @@ public class SupplierService {
     public Supplier update(Long id, SupplierRequestDTO dto) throws Exception {
         try {
             Supplier supplier = supplierRepository.findById(id)
-                    .orElseThrow(() -> new NoSuchElementException("Supplier not found with id: " + id));
+                    .orElseThrow(() -> new EntityNotFoundException("Supplier not found with id: " + id));
 
             // Actualizar estado
             supplier.setStatus(SupplierStatus.REVISION_NICIAL);
@@ -104,8 +122,8 @@ public class SupplierService {
                     .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
 
             return supplierRepository.save(supplier);
-        } catch (NoSuchElementException e) {
-            throw new Exception(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
