@@ -34,10 +34,10 @@ public class SupplierController {
     }
 
     @GetMapping("/searchByName")
-    public ResponseEntity<?> getAllByName(@RequestParam(name = "name", required = true) String name) {
+    public ResponseEntity<?> getAllAcceptedByName(@RequestParam(name = "name", required = true) String name) {
         try {
             return ResponseEntity.status(HttpStatus.OK)
-                    .body(service.findAllByName(name));
+                    .body(service.findAllAcceptedByName(name));
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"error\": \"La consulta no puede estar vacía.\"}");

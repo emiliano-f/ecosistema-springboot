@@ -19,4 +19,6 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     List<Supplier> findAllByStatusAndDeleted(SupplierStatus status, Boolean deleted);
 
     List<Supplier> findAllByCategoryAndStatusAndDeleted(Category category, SupplierStatus status, Boolean deleted);
+
+    List<Supplier> findAllByNameContainingIgnoreCaseAndStatusAndDeleted(String name, SupplierStatus status, Boolean deleted);
 }

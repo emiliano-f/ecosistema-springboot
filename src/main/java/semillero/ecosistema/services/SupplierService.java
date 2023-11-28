@@ -46,6 +46,11 @@ public class SupplierService {
 
     private final String CLOUDINARY_FOLDER = "proveedores";
 
+    /**
+     * Obtiene una lista de proveedores que han sido aceptados y no han sido eliminados.
+     * @return Lista de proveedores.
+     * @throws Exception Si ocurre algún error durante el proceso de obtención.
+     */
     public List<Supplier> findAllAccepted() throws Exception {
         try {
             return supplierRepository.findAllByStatusAndDeleted(SupplierStatus.ACEPTADO, false);
@@ -54,26 +59,48 @@ public class SupplierService {
         }
     }
 
-    public List<Supplier> findAllByName(String name) throws Exception {
+    /**
+     * Obtiene una lista de proveedores aceptados y no han sido eliminados que contienen el nombre especificado
+     * (ignorando mayúsculas y minúsculas).
+     * @param name El nombre a ser buscado.
+     * @return Lista de proveedores.
+     * @throws IllegalArgumentException Si el nombre proporcionado es nulo o vacío.
+     * @throws EntityNotFoundException Si no se encuentra ningún proveedor aceptado con el nombre especificado.
+     * @throws Exception Si ocurre algún otro error durante la búsqueda.
+     */
+    public List<Supplier> findAllAcceptedByName(String name) throws Exception {
         try {
             if (name == null || name.trim().isEmpty()) {
                 throw new IllegalArgumentException("The query cannot be empty.");
             }
 
-            List<Supplier> suppliers = supplierRepository.findAllByNameContainingIgnoreCase(name);
+            List<Supplier> suppliers = supplierRepository
+                    .findAllByNameContainingIgnoreCaseAndStatusAndDeleted(name, SupplierStatus.ACEPTADO, false);
 
             if (suppliers.isEmpty()) {
                 throw new EntityNotFoundException("Supplier not found with name: " + name);
             }
 
             return suppliers;
-        } catch (IllegalArgumentException | EntityNotFoundException e) {
-            throw e;
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
     }
 
+    /**
+     * Obtiene una lista de proveedores aceptados y no han sido eliminados que pertenecen a una categoría especifica
+     * (ignorando mayúsculas y minúsculas).
+     * @param categoryName El nombre de la categoría a ser buscada.
+     * @return Lista de proveedores.
+     * @throws IllegalArgumentException Si el nombre de la categoría proporcionado es nulo o vacío.
+     * @throws EntityNotFoundException Si no se encuentra la categoría con el nombre especificado
+     * o no hay proveedores aceptados en esa categoría.
+     * @throws Exception Si ocurre algún otro error durante la búsqueda.
+     */
     public List<Supplier> findAllAcceptedByCategory(String categoryName) throws Exception {
         try {
             Category category = categoryRepository.findByNameContainingIgnoreCase(categoryName);
@@ -90,13 +117,24 @@ public class SupplierService {
             }
 
             return suppliers;
-        } catch (IllegalArgumentException | EntityNotFoundException e) {
-            throw e;
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
     }
 
+    /**
+     * Guarda un nuevo proveedor en la base de datos utilizando la información proporcionada en el DTO y las imágenes.
+     * @param dto El DTO que contiene la información del proveedor.
+     * @param images Lista de archivos de imágenes asociadas al proveedor.
+     * @return El proveedor guardado en la base de datos.
+     * @throws MaxSuppliersReachedException Si el usuario ya tiene el máximo permitido de proveedores (3).
+     * @throws IOException Si ocurre un error durante la manipulación de imágenes.
+     * @throws Exception Si ocurre algún otro error durante el proceso de guardado.
+     */
     @Transactional
     public Supplier save(SupplierRequestDTO dto, List<MultipartFile> images) throws Exception {
         try {
@@ -125,7 +163,7 @@ public class SupplierService {
             supplier.setUser(user);
 
             // Guardar imágenes en Cloudinary. Establecer relacion con SupplierImage
-            List<SupplierImage> supplierImages = uploadSupplierImages(images,supplier);
+            List<SupplierImage> supplierImages = uploadSupplierImages(images, supplier);
             supplier.setImages(supplierImages);
 
             // Establecer valores por defecto
@@ -142,6 +180,16 @@ public class SupplierService {
         }
     }
 
+    /**
+     * Actualiza un proveedor existente en la base de datos con la información proporcionada en el DTO y las imágenes.
+     * @param id El ID del proveedor a ser actualizado.
+     * @param dto El DTO que contiene la información actualizada del proveedor.
+     * @param images Lista de archivos de imágenes actualizadas asociadas al proveedor.
+     * @return El proveedor actualizado en la base de datos.
+     * @throws EntityNotFoundException Si no se encuentra el proveedor con el ID especificado.
+     * @throws IOException Si ocurre un error durante la manipulación de imágenes.
+     * @throws Exception Si ocurre algún otro error durante el proceso de actualización.
+     */
     @Transactional
     public Supplier update(Long id, SupplierRequestDTO dto, List<MultipartFile> images) throws Exception {
         try {
@@ -188,6 +236,13 @@ public class SupplierService {
         }
     }
 
+    /**
+     * Carga las imágenes del proveedor en Cloudinary y crea entidades SupplierImage asociadas.
+     * @param images Lista de archivos de imágenes a ser cargados.
+     * @param supplier El proveedor al que se asociarán las imágenes.
+     * @return Lista de entidades SupplierImage creadas.
+     * @throws IOException Si ocurre un error durante la manipulación de imágenes.
+     */
     private List<SupplierImage> uploadSupplierImages(List<MultipartFile> images, Supplier supplier) throws IOException {
         List<SupplierImage> supplierImages = new ArrayList<>();
 
@@ -203,6 +258,6 @@ public class SupplierService {
             supplierImages.add(supplierImage);
         }
 
-        return  supplierImages;
+        return supplierImages;
     }
 }
