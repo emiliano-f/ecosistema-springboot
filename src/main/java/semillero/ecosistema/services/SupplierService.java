@@ -4,6 +4,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 import semillero.ecosistema.dtos.supplier.SupplierRequestDTO;
 import semillero.ecosistema.entities.*;
 import semillero.ecosistema.enumerations.SupplierStatus;
@@ -11,13 +12,19 @@ import semillero.ecosistema.exceptions.MaxSuppliersReachedException;
 import semillero.ecosistema.mappers.SupplierMapper;
 import semillero.ecosistema.repositories.*;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class SupplierService {
 
     @Autowired
     private SupplierRepository supplierRepository;
+
+    @Autowired
+    private SupplierImageRepository supplierImageRepository;
 
     @Autowired
     private CountryRepository countryRepository;
@@ -34,13 +41,10 @@ public class SupplierService {
     @Autowired
     private SupplierMapper supplierMapper;
 
-    public List<Supplier> findAll() throws Exception {
-        try {
-            return supplierRepository.findAll();
-        } catch (Exception e) {
-            throw new Exception(e.getMessage());
-        }
-    }
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
+    private final String CLOUDINARY_FOLDER = "proveedores";
 
     public List<Supplier> findAllAccepted() throws Exception {
         try {
@@ -94,7 +98,7 @@ public class SupplierService {
     }
 
     @Transactional
-    public Supplier save(SupplierRequestDTO dto) throws Exception {
+    public Supplier save(SupplierRequestDTO dto, List<MultipartFile> images) throws Exception {
         try {
             Supplier supplier = supplierMapper.toEntity(dto);
 
@@ -120,6 +124,10 @@ public class SupplierService {
             supplier.setCategory(category);
             supplier.setUser(user);
 
+            // Guardar imágenes en Cloudinary. Establecer relacion con SupplierImage
+            List<SupplierImage> supplierImages = uploadSupplierImages(images,supplier);
+            supplier.setImages(supplierImages);
+
             // Establecer valores por defecto
             supplier.setDeleted(false);
             supplier.setStatus(SupplierStatus.REVISION_NICIAL);
@@ -127,13 +135,15 @@ public class SupplierService {
             return supplierRepository.save(supplier);
         } catch (MaxSuppliersReachedException e) {
             throw new MaxSuppliersReachedException(e.getMessage());
+        } catch (IOException e) {
+            throw new IOException(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
     }
 
     @Transactional
-    public Supplier update(Long id, SupplierRequestDTO dto) throws Exception {
+    public Supplier update(Long id, SupplierRequestDTO dto, List<MultipartFile> images) throws Exception {
         try {
             Supplier supplier = supplierRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException("Supplier not found with id: " + id));
@@ -141,7 +151,7 @@ public class SupplierService {
             // Actualizar estado
             supplier.setStatus(SupplierStatus.REVISION_NICIAL);
 
-            //  Actualizar los campos del proveedor con la información proporcionada en el DTO
+            // Actualizar los campos del proveedor con la información proporcionada en el DTO
             supplier.setName(dto.getName());
             supplier.setDescription(dto.getDescription());
             supplier.setPhone(dto.getPhone());
@@ -160,11 +170,39 @@ public class SupplierService {
             User user = userRepository.findById(dto.getUserId())
                     .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
 
+            // Eliminar imágenes anteriores y cargar nuevas en Cloudinary. Actualizar relacion con SupplierImage
+            for (SupplierImage oldImage : supplier.getImages()) {
+                cloudinaryService.deleteImage(oldImage.getName(), CLOUDINARY_FOLDER);
+                supplierImageRepository.delete(oldImage);
+            }
+            List<SupplierImage> supplierImages = uploadSupplierImages(images, supplier);
+            supplier.setImages(supplierImages);
+
             return supplierRepository.save(supplier);
         } catch (EntityNotFoundException e) {
             throw new EntityNotFoundException(e.getMessage());
+        } catch (IOException e) {
+            throw new IOException(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
+    }
+
+    private List<SupplierImage> uploadSupplierImages(List<MultipartFile> images, Supplier supplier) throws IOException {
+        List<SupplierImage> supplierImages = new ArrayList<>();
+
+        for (MultipartFile image : images) {
+            String name = UUID.randomUUID().toString();
+            String path = cloudinaryService.uploadImage(image, name, CLOUDINARY_FOLDER);
+
+            SupplierImage supplierImage = new SupplierImage();
+            supplierImage.setName(name);
+            supplierImage.setPath(path);
+            supplierImage.setSupplier(supplier);
+
+            supplierImages.add(supplierImage);
+        }
+
+        return  supplierImages;
     }
 }
