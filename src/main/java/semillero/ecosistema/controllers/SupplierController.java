@@ -68,7 +68,7 @@ public class SupplierController {
     }
 
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    //@PreAuthorize("hasAuthority('USUARIO_REGULAR')")
+    @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> save(
             @RequestPart(name = "supplier") SupplierRequestDTO dto,
             @RequestParam(name = "images") List<MultipartFile> images
@@ -89,7 +89,7 @@ public class SupplierController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    //@PreAuthorize("hasAuthority('USUARIO_REGULAR')")
+    @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> update(
             @PathVariable Long id,
             @RequestPart(name = "supplier") SupplierRequestDTO dto,
