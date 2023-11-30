@@ -13,6 +13,7 @@ public class SupplierMapper {
 
             supplier.setName(source.getName());
             supplier.setDescription(source.getDescription());
+            supplier.setShortDescription(source.getShortDescription());
             supplier.setPhone(source.getPhone());
             supplier.setEmail(source.getEmail());
             supplier.setFacebook(source.getFacebook());

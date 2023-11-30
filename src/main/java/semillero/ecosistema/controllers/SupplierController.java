@@ -1,6 +1,7 @@
 package semillero.ecosistema.controllers;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -70,7 +71,7 @@ public class SupplierController {
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> save(
-            @RequestPart(name = "supplier") SupplierRequestDTO dto,
+            @Valid @RequestPart(name = "supplier") SupplierRequestDTO dto,
             @RequestParam(name = "images") List<MultipartFile> images
     ) {
         try {
@@ -92,7 +93,7 @@ public class SupplierController {
     @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> update(
             @PathVariable Long id,
-            @RequestPart(name = "supplier") SupplierRequestDTO dto,
+            @Valid @RequestPart(name = "supplier") SupplierRequestDTO dto,
             @RequestParam(name = "images") List<MultipartFile> images
     ) {
         try {

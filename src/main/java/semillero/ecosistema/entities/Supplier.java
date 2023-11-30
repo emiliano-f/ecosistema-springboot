@@ -2,10 +2,7 @@ package semillero.ecosistema.entities;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +28,11 @@ public class Supplier {
     @NotBlank(message = "Description cannot be blank")
     @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
+
+    @NotBlank(message = "Short Description cannot be blank")
+    @Size(max = 50, message = "The length cannot be greater than 50 characters")
+    @Column(name = "short_description", nullable = false, length = 50)
+    private String shortDescription;
 
     @NotBlank(message = "Phone cannot be blank")
     @Column(name = "phone", nullable = false)

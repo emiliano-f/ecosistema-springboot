@@ -208,7 +208,7 @@ public class SupplierService {
             supplier.setInstagram(dto.getInstagram());
             supplier.setCity(dto.getCity());
 
-            // Actualizar relaciones
+            // Establecer relaciones
             Country country = countryRepository.findById(dto.getCountryId())
                     .orElseThrow(() -> new IllegalArgumentException("Country not found with id: " + dto.getCountryId()));
             Province province = provinceRepository.findById(dto.getProvinceId())
@@ -217,6 +217,12 @@ public class SupplierService {
                     .orElseThrow(() -> new IllegalArgumentException("Category not found with id: " + dto.getCategoryId()));
             User user = userRepository.findById(dto.getUserId())
                     .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + dto.getUserId()));
+
+            // Actualizar relaciones a la entidad Supplier
+            supplier.setCountry(country);
+            supplier.setProvince(province);
+            supplier.setCategory(category);
+            supplier.setUser(user);
 
             // Eliminar imágenes anteriores y cargar nuevas en Cloudinary. Actualizar relacion con SupplierImage
             for (SupplierImage oldImage : supplier.getImages()) {
