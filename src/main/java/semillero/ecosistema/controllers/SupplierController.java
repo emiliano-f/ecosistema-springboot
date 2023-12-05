@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import semillero.ecosistema.dtos.supplier.SupplierFeedbackDTO;
 import semillero.ecosistema.dtos.supplier.SupplierRequestDTO;
 import semillero.ecosistema.exceptions.MaxSuppliersReachedException;
 import semillero.ecosistema.services.SupplierService;
@@ -23,8 +24,31 @@ public class SupplierController {
     @Autowired
     private SupplierService service;
 
+    @GetMapping("")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<?> getAll() {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findAll());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
+    @GetMapping("/allNames")
+    public ResponseEntity<?> getAllAcceptedNames() {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findAllAcceptedNames());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
     @GetMapping("/allAccepted")
-    public ResponseEntity<?> getAllAccepted()  {
+    public ResponseEntity<?> getAllAccepted() {
         try {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(service.findAllAccepted());
@@ -52,7 +76,7 @@ public class SupplierController {
     }
 
     @GetMapping("/searchByCategory")
-    public ResponseEntity<?> getAllAcceptedByCategory(@RequestParam(name = "category", required = true) String category)  {
+    public ResponseEntity<?> getAllAcceptedByCategory(@RequestParam(name = "category", required = true) String category) {
         try {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(service.findAllAcceptedByCategory(category));
@@ -62,6 +86,21 @@ public class SupplierController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("{\"error\": \"Proveedor no encontrados con categoria " + category + ".\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
+    @GetMapping("/me/feedback/{userId}")
+    @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
+    public ResponseEntity<?> getAllByUserId(@PathVariable Long userId) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findAllByUserId(userId));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Usuario no encontrado.\"}");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("{\"error\": \"Error Interno del Servidor.\"}");
@@ -108,6 +147,21 @@ public class SupplierController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"error\": \"Error al actualizar el Proveedor.\"}");
+        }
+    }
+
+    @PutMapping("/feedback/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<?> provideFeedback(@PathVariable Long id, @RequestBody SupplierFeedbackDTO dto) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.provideFeedback(id, dto));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Proveedor no encontrado.\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"Error al proporcionar feedback al Proveedor.\"}");
         }
     }
 }

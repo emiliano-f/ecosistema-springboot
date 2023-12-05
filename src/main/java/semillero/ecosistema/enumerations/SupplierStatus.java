@@ -1,7 +1,7 @@
 package semillero.ecosistema.enumerations;
 
 public enum SupplierStatus {
-    REVISION_NICIAL,        // Cuando se crea un proveedor
+    REVISION_INICIAL,        // Cuando se crea un proveedor
     ACEPTADO,               // Cuando el Administrador ha aprobado el proveedor
     DENEGADO,               // Cuando el Administrador ha rechazado el proveedor
     REQUIERE_CAMBIOS,       // Cuando el Administrador solicita modificaciones

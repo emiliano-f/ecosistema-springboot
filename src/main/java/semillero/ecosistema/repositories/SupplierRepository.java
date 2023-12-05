@@ -14,6 +14,10 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 
     Long countByUser(User user);
 
+    List<Supplier> findAllByUser(User user);
+
+    List<Supplier> findAllByStatus(SupplierStatus status);
+
     List<Supplier> findAllByNameContainingIgnoreCase(String name);
 
     List<Supplier> findAllByStatusAndDeleted(SupplierStatus status, Boolean deleted);

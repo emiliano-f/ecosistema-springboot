@@ -15,6 +15,7 @@ public class SupplierRequestDTO {
     private String name;
 
     @NotBlank
+    @Size(max = 300)
     private String description;
 
     @NotBlank
