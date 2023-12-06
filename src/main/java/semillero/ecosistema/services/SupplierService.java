@@ -76,7 +76,7 @@ public class SupplierService {
      * @param userId El ID del usuario para el cual se obtendrán los proveedores.
      * @return Una lista de DTOs que representan el estado y comentarios de proveedores asociados al usuario.
      * @throws EntityNotFoundException Si no se encuentra el usuario con el ID especificado.
-     * @throws Exception Si ocurre algún error durante el proceso de obtención.
+     * @throws Exception               Si ocurre algún error durante el proceso de obtención.
      */
     public List<SupplierFeedbackDTO> findAllByUserId(Long userId) throws Exception {
         try {
@@ -184,6 +184,27 @@ public class SupplierService {
             return supplierMapper.toDTOsList(suppliers);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException(e.getMessage());
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    /**
+     * Obtiene un proveedor por su ID.
+     *
+     * @param id El ID del proveedor a ser obtenido.
+     * @return Un DTO que representa al proveedor.
+     * @throws EntityNotFoundException Si no se encuentra el proveedor con el ID especificado.
+     * @throws Exception               Si ocurre un error durante el proceso de obtención.
+     */
+    public SupplierDTO findById(Long id) throws Exception {
+        try {
+            Supplier supplier = supplierRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Supplier not found with id: " + id));
+
+            return supplierMapper.toDTO(supplier);
         } catch (EntityNotFoundException e) {
             throw new EntityNotFoundException(e.getMessage());
         } catch (Exception e) {

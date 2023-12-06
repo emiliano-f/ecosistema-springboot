@@ -23,9 +23,6 @@ public interface SupplierMapper {
     Supplier toEntity(SupplierRequestDTO source);
 
     @Named("toDTO")
-    @Mapping(target = "country", source = "source.country.name")
-    @Mapping(target = "province", source = "source.province.name")
-    @Mapping(target = "category", source = "source.category.name")
     @Mapping(target = "images", source = "source.images", qualifiedByName = "mapImagesPaths")
     SupplierDTO toDTO(Supplier source);
 

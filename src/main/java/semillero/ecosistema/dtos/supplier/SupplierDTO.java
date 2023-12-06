@@ -1,6 +1,9 @@
 package semillero.ecosistema.dtos.supplier;
 
 import lombok.Data;
+import semillero.ecosistema.dtos.category.CategoryDTO;
+import semillero.ecosistema.dtos.country.CountryDTO;
+import semillero.ecosistema.dtos.province.ProvinceDTO;
 import semillero.ecosistema.enumerations.SupplierStatus;
 
 import java.util.List;
@@ -15,10 +18,10 @@ public class SupplierDTO {
     private String email;
     private String facebook;
     private String instagram;
-    private String country;
-    private String province;
+    private CountryDTO country;
+    private ProvinceDTO province;
     private String city;
     private List<String> images;
-    private String category;
+    private CategoryDTO category;
     private SupplierStatus status;
 }
