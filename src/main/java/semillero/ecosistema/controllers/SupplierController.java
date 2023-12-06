@@ -121,6 +121,18 @@ public class SupplierController {
         }
     }
 
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<?> getStatistics() {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findStatistics());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> save(

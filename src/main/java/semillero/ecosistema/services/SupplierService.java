@@ -5,6 +5,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import semillero.ecosistema.dtos.category.CategoryStatisticsDTO;
 import semillero.ecosistema.dtos.supplier.*;
 import semillero.ecosistema.entities.*;
 import semillero.ecosistema.enumerations.SupplierStatus;
@@ -15,7 +16,9 @@ import semillero.ecosistema.repositories.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class SupplierService {
@@ -207,6 +210,36 @@ public class SupplierService {
             return supplierMapper.toDTO(supplier);
         } catch (EntityNotFoundException e) {
             throw new EntityNotFoundException(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    /**
+     * Obtiene estadísticas de proveedores para el mes actual.
+     *
+     * @return Un DTO que contiene estadísticas de proveedores, incluyendo la cantidad de proveedores aprobados,
+     * en revisión, denegados y estadísticas por categoría.
+     * @throws Exception Si ocurre algún error durante el proceso de obtención.
+     */
+    public SupplierStatisticsDTO findStatistics() throws Exception {
+        try {
+            Integer approved = supplierRepository.countSuppliersByStatusInCurrentMonth(SupplierStatus.ACEPTADO);
+            Integer inReview = supplierRepository.countSuppliersByStatusInCurrentMonth(SupplierStatus.REVISION_INICIAL);
+            Integer denied = supplierRepository.countSuppliersByStatusInCurrentMonth(SupplierStatus.DENEGADO);
+            List<CategoryStatisticsDTO> categories = categoryRepository.findAll().stream()
+                    .map(category -> new CategoryStatisticsDTO(
+                            category.getName(),
+                            supplierRepository.countSuppliersByCategoryInCurrentMonth(category)))
+                    .collect(Collectors.toList());
+
+            SupplierStatisticsDTO statistics = new SupplierStatisticsDTO();
+            statistics.setApproved(approved);
+            statistics.setInReview(inReview);
+            statistics.setDenied(denied);
+            statistics.setCategories(categories);
+
+            return statistics;
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
