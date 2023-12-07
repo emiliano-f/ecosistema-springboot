@@ -9,19 +9,25 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
+@Table(name = "category_image")
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor
-public class Category {
+public class CategoryImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotBlank(message = "Name cannot be blank")
-    @Column(name = "name", nullable = false, unique = true)
+    @Column(name = "name", nullable = false)
     private String name;
 
-    @NotNull(message = "Image cannot be null")
-    @OneToOne(mappedBy = "category", cascade = CascadeType.ALL)
-    private CategoryImage image;
+    @NotBlank(message = "Path cannot be blank")
+    @Column(name = "path", nullable = false)
+    private String path;
+
+    @NotNull(message = "Category cannot be null")
+    @OneToOne(optional = false)
+    @JoinColumn(name = "category_id")
+    private Category category;
 }
