@@ -36,9 +36,6 @@ public class Publication {
     @Size(max = 2500, message = "Description must be less than 2500 characters")
     private String description;
 
-//    @OneToMany(mappedBy = "publication", cascade = CascadeType.ALL, orphanRemoval = true)
-//    private List<PublicationImage> images = new ArrayList<>();
-
     @NotEmpty(message = "Images list cannot be empty")
     @OneToMany(mappedBy = "publication", cascade = CascadeType.ALL)
     @JsonManagedReference
@@ -61,6 +58,7 @@ public class Publication {
     @PrePersist
     private void onPersist() {
         dateOfCreation = LocalDate.now();
+        deleted = false;
     }
 
 }

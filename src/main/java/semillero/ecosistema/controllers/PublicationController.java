@@ -5,12 +5,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import semillero.ecosistema.dtos.PublicationDTO;
 import semillero.ecosistema.entities.Publication;
 import semillero.ecosistema.exceptions.PublicationNotFoundException;
+import semillero.ecosistema.mappers.PublicationMapper;
 import semillero.ecosistema.services.PublicationService;
 import semillero.ecosistema.responses.ErrorResponse;
 
@@ -20,12 +20,14 @@ import java.util.List;
 @RestController
 @RequestMapping("api/publication")
 public class PublicationController {
-
     @Autowired
     private PublicationService publicationService;
 
+    @Autowired
+    private PublicationMapper publicationMapper;
+
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+   // @PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<?> save(
             @Valid @RequestPart(name = "publication") PublicationDTO dto,
             @RequestParam(name = "images") List<MultipartFile> images
@@ -43,7 +45,7 @@ public class PublicationController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
+    //@PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> update(
             @PathVariable Long id,
             @Valid @RequestPart(name = "supplier") PublicationDTO dto,
@@ -62,7 +64,7 @@ public class PublicationController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    //@PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
             publicationService.deletePublication(id);
@@ -86,8 +88,8 @@ public class PublicationController {
                     });
         }
     }
-    @GetMapping("")
-    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    @GetMapping("/all")
+    //@PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<?> getAllPublications() {
         try {
             List<Publication> allPublications = publicationService.getAllPublications();
@@ -101,6 +103,7 @@ public class PublicationController {
     public ResponseEntity<?> getPublicationById(@PathVariable Long id) {
         try {
             Publication publication = publicationService.getPublicationById(id);
+            publication.setVisualizationsAmount(publication.getVisualizationsAmount()+1);
             return ResponseEntity.status(HttpStatus.OK).body(publication);
         } catch (PublicationNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

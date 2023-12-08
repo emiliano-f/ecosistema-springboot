@@ -1,16 +1,15 @@
 package semillero.ecosistema.dtos;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import semillero.ecosistema.entities.User;
+
+import java.io.Serializable;
+import java.util.List;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class PublicationDTO {
+public class PublicationDTO implements Serializable {
     private Long id;
     private String title;
     private String description;
-    private User userCreator;
+    private Long userId;
+    private List<String> imageUrls;
 }

@@ -16,8 +16,10 @@ import semillero.ecosistema.exceptions.PublicationNotFoundException;
 import semillero.ecosistema.mappers.PublicationMapper;
 import semillero.ecosistema.repositories.PublicationImageRepository;
 import semillero.ecosistema.repositories.PublicationRepository;
+import semillero.ecosistema.repositories.UserRepository;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +28,9 @@ import java.util.UUID;
 public class PublicationService {
     @Autowired
     private PublicationRepository publicationRepository;
+
+    @Autowired
+    private UserRepository userRepository;
     @Autowired
     private PublicationImageRepository publicationImageRepository;
     @Autowired
@@ -43,17 +48,25 @@ public class PublicationService {
      * @throws Exception Si ocurre un error durante la creación de la publicación.
      */
     @Transactional
-    public Publication createPublication(PublicationDTO publicationDTO, List<MultipartFile> images) throws Exception {
+    public PublicationDTO createPublication(PublicationDTO publicationDTO, List<MultipartFile> images) throws Exception {
         try {
-//            Publication publication = PublicationMapper.INSTANCE.toEntity(publicationDTO);
+            User user = userRepository.findById(publicationDTO.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + publicationDTO.getUserId()));
+
             Publication publication = publicationMapper.toEntity(publicationDTO);
 
-            publication.setVisualizationsAmount(0);
 
             List<PublicationImage> publicationImages = uploadPublicationImages(images, publication);
             publication.setImages(publicationImages);
 
-            return publicationRepository.save(publication);
+            publication.setUserCreator(user);
+            publication.setVisualizationsAmount(0);
+            publication.setDeleted(false);
+            publication.setDateOfCreation(LocalDate.now());
+            publicationRepository.save(publication);
+
+
+            return publicationMapper.toDTO(publication);
         } catch (Exception e) {
             throw new Exception("Error al crear la publicación", e);
         }
@@ -74,11 +87,7 @@ public class PublicationService {
             Publication existingPublication = publicationRepository.findById(id)
                     .orElseThrow(() -> new EntityNotFoundException("Publication not found with id: " + id));
 
-//            Publication updatedPublication = PublicationMapper.INSTANCE.updateEntity(updatedPublicationDTO, existingPublication);
-            Publication updatedPublication = publicationMapper.updateEntity(updatedPublicationDTO, existingPublication);
-
-            existingPublication.setTitle(updatedPublication.getTitle());
-            existingPublication.setDescription(updatedPublication.getDescription());
+            publicationMapper.updateEntity(updatedPublicationDTO, existingPublication);
 
             for (PublicationImage oldImage : existingPublication.getImages()) {
                 cloudinaryService.deleteImage(oldImage.getName(), CLOUDINARY_FOLDER);
@@ -146,42 +155,6 @@ public class PublicationService {
             publicationImages.add(publicationImage);
         }
         return publicationImages;
-    }
-
-    /**
-     * Incrementa las visualizaciones de una publicación si el usuario autenticado no es el creador de la publicación.
-     *
-     * @param id ID de la publicación a ser visualizada.
-     * @throws Exception Si no se encuentra la publicación con el ID especificado.
-     */
-    @Transactional
-    public void incrementVisualizationsIfNeeded(Long id) throws Exception {
-        UserDetails userDetails = getCurrentUserDetails();
-        String currentUsername = userDetails.getUsername();
-
-        Publication publication = getPublicationById(id);
-        User creator = publication.getUserCreator();
-
-        if (!currentUsername.equals(creator.getUsername())) {
-            int currentViews = publication.getVisualizationsAmount();
-            publication.setVisualizationsAmount(currentViews + 1);
-            publicationRepository.save(publication);
-        }
-    }
-
-    /**
-     * Obtiene los detalles del usuario autenticado.
-     *
-     * @return Detalles del usuario autenticado.
-     * @throws IllegalStateException Si el usuario no está autenticado.
-     */
-    private UserDetails getCurrentUserDetails() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication.isAuthenticated() && authentication.getPrincipal() instanceof UserDetails) {
-            return (UserDetails) authentication.getPrincipal();
-        }
-        throw new IllegalStateException("User not authenticated.");
     }
 
     /**
