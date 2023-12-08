@@ -5,9 +5,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import semillero.ecosistema.dtos.PublicationDTO;
+import semillero.ecosistema.dtos.publication.PublicationDTO;
 import semillero.ecosistema.entities.Publication;
 import semillero.ecosistema.exceptions.PublicationNotFoundException;
 import semillero.ecosistema.mappers.PublicationMapper;
@@ -27,12 +28,15 @@ public class PublicationController {
     private PublicationMapper publicationMapper;
 
     @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-   // @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    //@PreAuthorize("hasAuthority('ADMINISTRADOR')")
     public ResponseEntity<?> save(
             @Valid @RequestPart(name = "publication") PublicationDTO dto,
             @RequestParam(name = "images") List<MultipartFile> images
     ) {
         try {
+            System.out.println("print prueba");
+
+
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(publicationService.createPublication(dto, images));
         } catch (IOException e) {
@@ -48,7 +52,7 @@ public class PublicationController {
     //@PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> update(
             @PathVariable Long id,
-            @Valid @RequestPart(name = "supplier") PublicationDTO dto,
+            @Valid @RequestPart(name = "publication") PublicationDTO dto,
             @RequestParam(name = "images") List<MultipartFile> images
     ) {
         try {
@@ -59,7 +63,7 @@ public class PublicationController {
                     .body("{\"error\": \"Las imágenes no son válidas.\"}");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"error\": \"Error al actualizar el Proveedor.\"}");
+                    .body("{\"error\":"+ e.getMessage() + "}");
         }
     }
 
@@ -68,7 +72,7 @@ public class PublicationController {
     public ResponseEntity<?> delete(@PathVariable Long id) {
         try {
             publicationService.deletePublication(id);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("La publicación ha sido borradda con éxito.");
         } catch (PublicationNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ErrorResponse("Publicación no encontrada con ID: " + id));

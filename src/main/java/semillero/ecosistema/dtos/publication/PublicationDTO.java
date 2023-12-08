@@ -1,4 +1,4 @@
-package semillero.ecosistema.dtos;
+package semillero.ecosistema.dtos.publication;
 
 import lombok.Data;
 

@@ -3,12 +3,9 @@ package semillero.ecosistema.services;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import semillero.ecosistema.dtos.PublicationDTO;
+import semillero.ecosistema.dtos.publication.PublicationDTO;
 import semillero.ecosistema.entities.Publication;
 import semillero.ecosistema.entities.PublicationImage;
 import semillero.ecosistema.entities.User;
@@ -50,6 +47,7 @@ public class PublicationService {
     @Transactional
     public PublicationDTO createPublication(PublicationDTO publicationDTO, List<MultipartFile> images) throws Exception {
         try {
+
             User user = userRepository.findById(publicationDTO.getUserId())
                     .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + publicationDTO.getUserId()));
 
@@ -57,12 +55,13 @@ public class PublicationService {
 
 
             List<PublicationImage> publicationImages = uploadPublicationImages(images, publication);
-            publication.setImages(publicationImages);
 
+            publication.setImages(publicationImages);
             publication.setUserCreator(user);
             publication.setVisualizationsAmount(0);
             publication.setDeleted(false);
             publication.setDateOfCreation(LocalDate.now());
+
             publicationRepository.save(publication);
 
 

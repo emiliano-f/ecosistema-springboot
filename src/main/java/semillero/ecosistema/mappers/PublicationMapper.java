@@ -2,7 +2,7 @@ package semillero.ecosistema.mappers;
 
 import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
-import semillero.ecosistema.dtos.PublicationDTO;
+import semillero.ecosistema.dtos.publication.PublicationDTO;
 import semillero.ecosistema.entities.Publication;
 import semillero.ecosistema.entities.PublicationImage;
 

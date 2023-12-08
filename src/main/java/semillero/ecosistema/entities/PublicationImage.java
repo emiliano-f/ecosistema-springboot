@@ -28,11 +28,7 @@ public class PublicationImage {
     @NotBlank(message = "Path cannot be blank")
     @Column(name = "path", nullable = false)
     private String path;
-
-//    @ManyToOne(fetch = FetchType.LAZY)
-//    @JoinColumn(name = "publication_id")
-//    private Publication publication;
-
+    
     @NotNull(message = "Publication cannot be null")
     @ManyToOne(optional = false)
     @JoinColumn(name = "publication_id")
