@@ -1,15 +1,18 @@
 package semillero.ecosistema.controllers;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import semillero.ecosistema.entities.Category;
+import org.springframework.web.multipart.MultipartFile;
+import semillero.ecosistema.dtos.category.CategoryDTO;
 import semillero.ecosistema.services.CategoryService;
 
-import java.util.List;
-import java.util.Optional;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("api/categories")
@@ -18,62 +21,68 @@ public class CategoryController {
     @Autowired
     private CategoryService categoryService;
 
-    @PostMapping("")
-    public ResponseEntity<?> saveCategory(@Valid @RequestBody Category category) {
-        try {
-            Category savedCategory = categoryService.save(category);
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(savedCategory);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"error\": \"An error occurred while processing the request.\"}");
-        }
-    }
-
-    @PutMapping("/{id}")
-    public ResponseEntity<?> updateCategory(@Valid @RequestBody Category category, @PathVariable Long id) {
-        try {
-            Category updateCategory = categoryService.update(id, category);
-            return ResponseEntity.ok(updateCategory);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body("{\"error\": \"An error occurred while processing the request.\"}");
-        }
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCategory(@PathVariable Long id) {
-        try {
-            categoryService.delete(id);
-            return ResponseEntity.noContent().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"An error occurred while processing the request.\"}");
-        }
-    }
-
     @GetMapping("")
-    public ResponseEntity<?> findAllCategories() {
+    public ResponseEntity<?> getAll() {
         try {
-            List<Category> categories = categoryService.findAllCategories();
-            return ResponseEntity.ok(categories);
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(categoryService.findAll());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("{\"error\": \"An error occurred while processing the request.\"}");
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
         }
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<?> findCategoryById(@PathVariable Long id){
+    public ResponseEntity<?> getById(@PathVariable Long id) {
         try {
-            Optional<Category> categoryById = categoryService.findById(id);
-            if (categoryById.isPresent()) {
-                return ResponseEntity.ok(categoryById.get());
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(categoryService.findById(id));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Categoría no encontrada.\"}");
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
+    @PostMapping(value = "", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<?> save(
+            @Valid @RequestPart(name = "category") CategoryDTO dto,
+            @RequestParam(name = "image") MultipartFile image
+    ) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(categoryService.save(dto, image));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"La imágen no es válida.\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"Error al crear la Categoría.\"}");
+        }
+    }
+
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<?> update(
+            @PathVariable Long id,
+            @Valid @RequestPart(name = "category") CategoryDTO dto,
+            @RequestParam(name = "image") MultipartFile image
+    ) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(categoryService.update(id, dto, image));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Categoría no encontrada.\"}");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"La imágen no es válida.\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body("{\"error\": \"Error al crear la Categoría.\"}");
         }
     }
 }
