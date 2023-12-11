@@ -16,7 +16,6 @@ import semillero.ecosistema.repositories.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -74,6 +73,28 @@ public class SupplierService {
     }
 
     /**
+     * Obtiene todos los proveedores asociados a un usuario específico.
+     *
+     * @param userId El ID del usuario para el cual se obtendrán los proveedores.
+     * @return Una lista de DTOs que representan los proveedores asociados al usuario.
+     * @throws EntityNotFoundException Si no se encuentra el usuario con el ID especificado.
+     * @throws Exception               Si ocurre algún error durante el proceso de obtención.
+     */
+    public List<SupplierDTO> findAllByUserId(Long userId) throws Exception {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+            List<Supplier> suppliers = supplierRepository.findAllByUser(user);
+            return supplierMapper.toDTOsList(suppliers);
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    /**
      * Obtiene el estado y comentarios de proveedores asociados a un usuario específico.
      *
      * @param userId El ID del usuario para el cual se obtendrán los proveedores.
@@ -81,7 +102,7 @@ public class SupplierService {
      * @throws EntityNotFoundException Si no se encuentra el usuario con el ID especificado.
      * @throws Exception               Si ocurre algún error durante el proceso de obtención.
      */
-    public List<SupplierFeedbackDTO> findAllByUserId(Long userId) throws Exception {
+    public List<SupplierFeedbackDTO> findAllFeedbackByUserId(Long userId) throws Exception {
         try {
             User user = userRepository.findById(userId)
                     .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));

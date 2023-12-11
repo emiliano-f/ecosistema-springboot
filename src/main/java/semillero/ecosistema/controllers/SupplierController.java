@@ -92,12 +92,27 @@ public class SupplierController {
         }
     }
 
-    @GetMapping("/me/feedback/{userId}")
+    @GetMapping("/me/{userId}")
     @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> getAllByUserId(@PathVariable Long userId) {
         try {
             return ResponseEntity.status(HttpStatus.OK)
                     .body(service.findAllByUserId(userId));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("{\"error\": \"Usuario no encontrado.\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
+    @GetMapping("/me/feedback/{userId}")
+    @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
+    public ResponseEntity<?> getAllFeedbackByUserId(@PathVariable Long userId) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findAllFeedbackByUserId(userId));
         } catch (EntityNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body("{\"error\": \"Usuario no encontrado.\"}");

@@ -24,4 +24,5 @@ public class SupplierDTO {
     private List<String> images;
     private CategoryDTO category;
     private SupplierStatus status;
+    private String feedback;
 }
