@@ -12,6 +12,8 @@ import org.springframework.web.multipart.MultipartFile;
 import semillero.ecosistema.dtos.supplier.SupplierRequestDTO;
 import semillero.ecosistema.exceptions.MaxSuppliersReachedException;
 import semillero.ecosistema.services.SupplierService;
+import semillero.ecosistema.dtos.supplier.SupplierCategoryCount;
+import semillero.ecosistema.dtos.supplier.SupplierStatusCount;
 
 import java.io.IOException;
 import java.util.List;
@@ -108,6 +110,28 @@ public class SupplierController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body("{\"error\": \"Error al actualizar el Proveedor.\"}");
+        }
+    }
+
+    @GetMapping("/countSupplierByStatus")
+    public ResponseEntity<?> getCountSupplierByStatus()  {
+        try {
+            List<SupplierStatusCount> countSupplierByStatus = service.getCountSupplierByStatus();
+            return ResponseEntity.ok(countSupplierByStatus);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error al obtener la cantidad de proveedores por estado.\"}");
+        }
+    }
+
+    @GetMapping("/countSupplierByCategory")
+    public ResponseEntity<?> getCountSupplierByCategory() {
+        try {
+            List<SupplierCategoryCount> countSupplierByCategory = service.getCountSupplierByCategory();
+            return ResponseEntity.ok(countSupplierByCategory);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error al obtener la cantidad de proveedores por categoria.\"}");
         }
     }
 }

@@ -11,6 +11,8 @@ import semillero.ecosistema.enumerations.SupplierStatus;
 import semillero.ecosistema.exceptions.MaxSuppliersReachedException;
 import semillero.ecosistema.mappers.SupplierMapper;
 import semillero.ecosistema.repositories.*;
+import semillero.ecosistema.dtos.supplier.SupplierCategoryCount;
+import semillero.ecosistema.dtos.supplier.SupplierStatusCount;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -265,5 +267,33 @@ public class SupplierService {
         }
 
         return supplierImages;
+    }
+
+    /**
+     * Obtiene la cantidad de proveedores agrupados por estado
+     * @return Lista del par <Estado, Total>
+     * @throws Exception
+     */
+    @Autowired
+    public List<SupplierStatusCount> getCountSupplierByStatus() throws Exception {
+        try {
+            return supplierRepository.countSupplierByStatus();
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    /**
+     * Obtiene la cantidad de proveedores agrupadas por categoría
+     * @return Lista del par <Categoria, Total>
+     * @throws Exception
+     */
+    @Autowired
+    public List<SupplierCategoryCount> getCountSupplierByCategory() throws Exception {
+        try {
+            return supplierRepository.countSupplierByCategory();
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
     }
 }
