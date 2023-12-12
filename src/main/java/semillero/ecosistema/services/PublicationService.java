@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import semillero.ecosistema.dtos.publication.PublicationDTO;
+import semillero.ecosistema.dtos.publication.PublicationRequestDTO;
 import semillero.ecosistema.entities.Publication;
 import semillero.ecosistema.entities.PublicationImage;
 import semillero.ecosistema.entities.User;
@@ -36,67 +37,52 @@ public class PublicationService {
     private PublicationMapper publicationMapper;
     private final String CLOUDINARY_FOLDER = "publicaciones";
 
-    /**
-     * Crea una nueva publicación con la información proporcionada en el DTO y las imágenes adjuntas.
-     *
-     * @param publicationDTO DTO que contiene la información de la publicación.
-     * @param images         Lista de archivos de imágenes asociadas a la publicación.
-     * @return La publicación creada en la base de datos.
-     * @throws Exception Si ocurre un error durante la creación de la publicación.
-     */
+
     @Transactional
-    public PublicationDTO createPublication(PublicationDTO publicationDTO, List<MultipartFile> images) throws Exception {
+    public PublicationDTO save(PublicationRequestDTO publicationRequestDTO, List<MultipartFile> images) throws Exception {
         try {
+            Publication publication = publicationMapper.toEntity(publicationRequestDTO);
 
-            User user = userRepository.findById(publicationDTO.getUserId())
-                    .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + publicationDTO.getUserId()));
-
-            Publication publication = publicationMapper.toEntity(publicationDTO);
-
+            User user = userRepository.findById(publicationRequestDTO.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + publicationRequestDTO.getUserId()));
 
             List<PublicationImage> publicationImages = uploadPublicationImages(images, publication);
 
+            publication.setTitle(publicationRequestDTO.getTitle());
+            publication.setDescription(publicationRequestDTO.getDescription());
+            publication.setDateOfCreation(LocalDate.now());
+            publication.setDeleted(false);
+            publication.setVisualizationsAmount(0);
             publication.setImages(publicationImages);
             publication.setUserCreator(user);
-            publication.setVisualizationsAmount(0);
-            publication.setDeleted(false);
-            publication.setDateOfCreation(LocalDate.now());
-
             publicationRepository.save(publication);
 
-
             return publicationMapper.toDTO(publication);
+
         } catch (Exception e) {
             throw new Exception("Error al crear la publicación", e);
         }
     }
 
-    /**
-     * Actualiza una publicación existente con la información proporcionada en el DTO y las imágenes actualizadas.
-     *
-     * @param id                    ID de la publicación a ser actualizada.
-     * @param updatedPublicationDTO DTO que contiene la información actualizada de la publicación.
-     * @param images                Lista de archivos de imágenes actualizadas asociadas a la publicación.
-     * @return La publicación actualizada en la base de datos.
-     * @throws Exception Si no se encuentra la publicación con el ID especificado o si ocurre un error durante la actualización.
-     */
     @Transactional
-    public Publication updatePublication(Long id, PublicationDTO updatedPublicationDTO, List<MultipartFile> images) throws Exception {
+    public PublicationDTO update(Long id, PublicationRequestDTO publicationRequestDTO, List<MultipartFile> images) throws Exception {
         try {
-            Publication existingPublication = publicationRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Publication not found with id: " + id));
+            Publication publication = publicationRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Publicación no encontrada con el id: " + id));
 
-            publicationMapper.updateEntity(updatedPublicationDTO, existingPublication);
+            publication.setTitle(publicationRequestDTO.getTitle());
+            publication.setDescription(publicationRequestDTO.getDescription());
 
-            for (PublicationImage oldImage : existingPublication.getImages()) {
+            for (PublicationImage oldImage : publication.getImages()) {
                 cloudinaryService.deleteImage(oldImage.getName(), CLOUDINARY_FOLDER);
                 publicationImageRepository.delete(oldImage);
             }
+            List<PublicationImage> publicationImages = uploadPublicationImages(images, publication);
+            publication.setImages(publicationImages);
 
-            List<PublicationImage> publicationImages = uploadPublicationImages(images, existingPublication);
-            existingPublication.setImages(publicationImages);
+            publicationRepository.save(publication);
 
-            return publicationRepository.save(existingPublication);
+            return publicationMapper.toDTO(publication);
         } catch (EntityNotFoundException e) {
             throw new EntityNotFoundException(e.getMessage());
         } catch (IOException e) {
@@ -106,14 +92,8 @@ public class PublicationService {
         }
     }
 
-    /**
-     * Elimina una publicación con el ID especificado, incluyendo la eliminación de imágenes asociadas.
-     *
-     * @param id ID de la publicación a ser eliminada.
-     * @throws Exception Si no se encuentra la publicación con el ID especificado o si ocurre un error durante la eliminación.
-     */
     @Transactional
-    public void deletePublication(Long id) throws Exception {
+    public void delete(Long id) throws Exception {
         try {
             Publication existingPublication = publicationRepository.findById(id)
                     .orElseThrow(() -> new PublicationNotFoundException("Publicación no encontrada con ID: " + id));
@@ -121,7 +101,7 @@ public class PublicationService {
             List<PublicationImage> images = existingPublication.getImages();
             for (PublicationImage image : images) {
                 String name = image.getName();
-                String folder = "imagenes" + existingPublication.getUserCreator().getUsername();
+                String folder = "imágenes" + existingPublication.getUserCreator().getUsername();
                 cloudinaryService.deleteImage(name, folder);
             }
             publicationRepository.delete(existingPublication);
@@ -131,14 +111,27 @@ public class PublicationService {
             throw new Exception(e.getMessage());
         }
     }
+    @Transactional
+    public void deleteToTrue(Long id) throws Exception {
+        try {
+            Publication existingPublication = publicationRepository.findById(id)
+                    .orElseThrow(() -> new PublicationNotFoundException("Publicación no encontrada con ID: " + id));
 
+            existingPublication.setDeleted(true);
+            publicationRepository.save(existingPublication);
+        } catch (PublicationNotFoundException e) {
+            throw new PublicationNotFoundException(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
     /**
      * Carga las imágenes de la publicación en Cloudinary y crea entidades PublicationImage asociadas.
      *
      * @param images      Lista de archivos de imágenes a ser cargados.
      * @param publication La publicación a la que se asociarán las imágenes.
      * @return Lista de entidades PublicationImage creadas.
-     * @throws IOException Si ocurre un error durante la manipulación de imágenes.
+     * @throws IOException Es lanzada si ocurre un error durante la manipulación de imágenes.
      */
     private List<PublicationImage> uploadPublicationImages(List<MultipartFile> images, Publication publication) throws IOException {
         List<PublicationImage> publicationImages = new ArrayList<>();
@@ -157,49 +150,74 @@ public class PublicationService {
     }
 
     /**
-     * Obtiene una publicación por su ID.
+     * Obtiene una publicación por su ID e incrementa la cantidad de visualizaciones.
      *
-     * @param id ID de la publicación a ser obtenida.
+     * @param id Id de la publicación a ser obtenida.
      * @return La publicación encontrada.
      * @throws Exception Si no se encuentra la publicación con el ID especificado.
      */
     @Transactional
-    public Publication getPublicationById(Long id) throws Exception {
+    public PublicationDTO getPublicationById(Long id) throws Exception {
         try {
-            return publicationRepository.findById(id)
-                    .orElseThrow(() -> new PublicationNotFoundException("Publicación no encontrada con ID: " + id));
-        } catch (PublicationNotFoundException e) {
-            throw new PublicationNotFoundException(e.getMessage());
+            Publication publication = publicationRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Publication not found with id: " + id));
+
+            publication.setVisualizationsAmount(publication.getVisualizationsAmount()+1);
+            publicationRepository.save(publication);
+
+            return publicationMapper.toDTO(publication);
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
     }
-
     /**
      * Obtiene todas las publicaciones activas.
      *
      * @return Lista de publicaciones activas.
-     * @throws Exception Si ocurre un error durante la obtención.
+     * @throws Exception Lanzada si ocurre un error durante la obtención.
      */
     @Transactional
-    public List<Publication> getAllActivePublications() throws Exception {
+    public List<PublicationDTO> getAllActivePublications() throws Exception {
         try {
-            return publicationRepository.findAllByDeletedFalse();
+            List<Publication> publications = publicationRepository.findAllByDeletedFalse();
+            return publicationMapper.toDTOsList(publications);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+    /**
+     * Obtiene todas las publicaciones.
+     *
+     * @return Lista de todas las publicaciones.
+     * @throws Exception Es lanzada si ocurre un error durante la obtención.
+     */
+    @Transactional
+    public List<PublicationDTO> getAllPublications() throws Exception {
+        try {
+            List<Publication> publications = publicationRepository.findAll();
+            return publicationMapper.toDTOsList(publications);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
     }
 
     /**
-     * Obtiene todas las publicaciones.
-     *
-     * @return Lista de todas las publicaciones.
-     * @throws Exception Si ocurre un error durante la obtención.
+     * Incrementa la cantidad de visualizaciones de la publicación según su id en 1.
+     * @param id Recibe de la publicación su id.
      */
     @Transactional
-    public List<Publication> getAllPublications() throws Exception {
+    public void increment(Long id) throws Exception {
         try {
-            return publicationRepository.findAll();
+            Publication publication = publicationRepository.findById(id)
+                    .orElseThrow(() -> new EntityNotFoundException("Publication not found with id: " + id));
+
+            publication.setVisualizationsAmount(publication.getVisualizationsAmount()+1);
+            publicationRepository.save(publication);
+
+        } catch (EntityNotFoundException e) {
+            throw new EntityNotFoundException(e.getMessage());
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

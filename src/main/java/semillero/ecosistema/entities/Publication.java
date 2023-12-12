@@ -47,7 +47,7 @@ public class Publication {
     private User userCreator;
 
     @Column(nullable = false)
-    private boolean deleted;
+    private Boolean deleted;
 
     private Integer visualizationsAmount;
 
@@ -55,10 +55,6 @@ public class Publication {
     @Column(nullable = false, updatable = false)
     private LocalDate dateOfCreation;
 
-    @PrePersist
-    private void onPersist() {
-        dateOfCreation = LocalDate.now();
-        deleted = false;
-    }
+
 
 }
