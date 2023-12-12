@@ -42,6 +42,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/countries/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/provinces/**").permitAll()
                         .requestMatchers(HttpMethod.GET,"/api/suppliers/**").permitAll()
+                        .requestMatchers(HttpMethod.GET,"/api/publication/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors
@@ -57,7 +58,6 @@ public class SecurityConfig {
 
         return http.build();
     }
-
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
