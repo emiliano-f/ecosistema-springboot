@@ -46,7 +46,9 @@ public class Publication {
     @JoinColumn(name = "user_id", nullable = false)
     private User userCreator;
 
-    @Column(nullable = false)
+    @NotNull(message = "Deleted flag cannot be null")
+    @Column(name = "deleted", nullable = false)
+    @Convert(converter = org.hibernate.type.YesNoConverter.class)
     private Boolean deleted;
 
     private Integer visualizationsAmount;

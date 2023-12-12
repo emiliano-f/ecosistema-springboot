@@ -106,7 +106,6 @@ public class PublicationController {
         }
     }
     @GetMapping("/all-active")
-    @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> getAllActivePublications() {
         try {
             return ResponseEntity.ok(publicationService.getAllActivePublications());
@@ -118,7 +117,6 @@ public class PublicationController {
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> getPublicationById(@PathVariable Long id) {
         try {
             return ResponseEntity.status(HttpStatus.OK).body(publicationService.getPublicationById(id));
@@ -131,7 +129,6 @@ public class PublicationController {
     }
 
     @GetMapping("/increment/{id}")
-    @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> incrementById(@PathVariable Long id) {
         try {
             publicationService.increment(id);
