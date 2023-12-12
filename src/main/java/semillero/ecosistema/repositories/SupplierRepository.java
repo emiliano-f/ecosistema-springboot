@@ -7,6 +7,7 @@ import semillero.ecosistema.entities.Supplier;
 import semillero.ecosistema.entities.User;
 import semillero.ecosistema.enumerations.SupplierStatus;
 
+import java.util.Date;
 import java.util.List;
 
 @Repository
@@ -21,4 +22,6 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
     List<Supplier> findAllByCategoryAndStatusAndDeleted(Category category, SupplierStatus status, Boolean deleted);
 
     List<Supplier> findAllByNameContainingIgnoreCaseAndStatusAndDeleted(String name, SupplierStatus status, Boolean deleted);
+
+    List<Supplier> findAllByCreatedAtGreaterThanEqual(Date initialDate);
 }

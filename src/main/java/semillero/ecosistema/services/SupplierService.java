@@ -14,6 +14,7 @@ import semillero.ecosistema.repositories.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.UUID;
 
@@ -265,5 +266,21 @@ public class SupplierService {
         }
 
         return supplierImages;
+    }
+
+    /**
+     * Obtiene los proveedores creados en los últimos 7 días.
+     * @return Lista de entidades Supplier.
+     * @throws Exception Si ocurre un error durante la obtención de datos.
+     */
+    public List<Supplier> findAllCreatedAtLastWeek() throws Exception {
+        try {
+            Calendar calendar = Calendar.getInstance();
+            calendar.add(Calendar.DAY_OF_YEAR, -7);
+            return supplierRepository
+                    .findAllByCreatedAtGreaterThanEqual(calendar.getTime());
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
     }
 }
