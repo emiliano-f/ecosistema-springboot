@@ -33,7 +33,7 @@ public class Publication {
 
     @NotNull(message = "Description may not be null")
     @NotBlank(message = "Description may not be blank")
-    @Size(max = 2500, message = "Description must be less than 2500 characters")
+    @Size(max = 7500, message = "Description must be less than 7500 characters")
     private String description;
 
     @NotEmpty(message = "Images list cannot be empty")

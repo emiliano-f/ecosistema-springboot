@@ -4,6 +4,7 @@ import org.mapstruct.*;
 import org.mapstruct.factory.Mappers;
 import semillero.ecosistema.dtos.publication.PublicationDTO;
 import semillero.ecosistema.dtos.publication.PublicationRequestDTO;
+import semillero.ecosistema.dtos.publication.PublicationStatisticsDTO;
 import semillero.ecosistema.entities.Publication;
 import semillero.ecosistema.entities.PublicationImage;
 
@@ -33,6 +34,11 @@ public interface PublicationMapper {
     @IterableMapping(qualifiedByName = "toDTO")
     List<PublicationDTO> toDTOsList(List<Publication> source);
 
+    @Named("toStatisticsDTO")
+    @Mapping(target = "title", source = "source.title")
+    @Mapping(target = "visualizationsAmount", source = "source.visualizationsAmount")
+    @Mapping(target = "dateOfCreation", source = "source.dateOfCreation")
+    PublicationStatisticsDTO toStatisticsDTO(Publication source);
 
     @Named("mapImagesPaths")
     static List<String> mapImagesPaths(List<PublicationImage> images) {
@@ -40,4 +46,6 @@ public interface PublicationMapper {
                 .map(PublicationImage::getPath)
                 .collect(Collectors.toList());
     }
+
+
 }

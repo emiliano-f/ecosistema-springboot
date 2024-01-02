@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import semillero.ecosistema.dtos.publication.PublicationDTO;
 import semillero.ecosistema.dtos.publication.PublicationRequestDTO;
+import semillero.ecosistema.dtos.publication.PublicationStatisticsDTO;
 import semillero.ecosistema.entities.Publication;
 import semillero.ecosistema.entities.PublicationImage;
 import semillero.ecosistema.entities.User;
@@ -21,6 +22,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class PublicationService {
@@ -218,6 +220,18 @@ public class PublicationService {
 
         } catch (EntityNotFoundException e) {
             throw new EntityNotFoundException(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+
+    public List<PublicationStatisticsDTO> findStatistics() throws Exception {
+        try {
+            List<Publication> publications = publicationRepository.findAll();
+
+            return publications.stream().map(publicationMapper::toStatisticsDTO).collect(Collectors.toList());
+
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }

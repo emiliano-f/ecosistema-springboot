@@ -140,4 +140,16 @@ public class PublicationController {
             throw new RuntimeException(e);
         }
     }
+
+    @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('ADMINISTRADOR')")
+    public ResponseEntity<?> getStatistics() {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(publicationService.findStatistics());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
 }
