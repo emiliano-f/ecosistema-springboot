@@ -15,7 +15,7 @@ public class PublicationRequestDTO implements Serializable {
     private String title;
 
     @NotBlank
-    @Size(max = 2500)
+    @Size(max = 7500)
     private String description;
 
     @NotNull

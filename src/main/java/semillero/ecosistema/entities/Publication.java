@@ -26,14 +26,15 @@ public class Publication {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotNull(message = "Title may not be null")
-    @NotBlank(message = "Title may not be blank")
-    @Size(max = 255, message = "Title must be less than 255 characters")
+    @NotNull(message = "El título no puede ser null.")
+    @NotBlank(message = "El título no puede estar en blanco.")
+    @Size(max = 255, message = "El título debe tener menos de 255 caracteres.")
     private String title;
 
-    @NotNull(message = "Description may not be null")
-    @NotBlank(message = "Description may not be blank")
-    @Size(max = 7500, message = "Description must be less than 7500 characters")
+    @NotNull(message = "La descripción no puede ser null.")
+    @NotBlank(message = "La descripción no puede estar en blanco.")
+    @Size(max = 7500, message = "La descripción debe tener menos de 7500 caracteres.")
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
 
     @NotEmpty(message = "Images list cannot be empty")
@@ -41,7 +42,7 @@ public class Publication {
     @JsonManagedReference
     private List<PublicationImage> images;
 
-    @NotNull(message = "User cannot be null")
+    @NotNull(message = "El usuario no puede ser null.")
     @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinColumn(name = "user_id", nullable = false)
     private User userCreator;
