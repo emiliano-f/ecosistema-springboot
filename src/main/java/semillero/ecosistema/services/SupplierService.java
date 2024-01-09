@@ -9,6 +9,7 @@ import semillero.ecosistema.dtos.category.CategoryStatisticsDTO;
 import semillero.ecosistema.dtos.supplier.*;
 import semillero.ecosistema.entities.*;
 import semillero.ecosistema.enumerations.SupplierStatus;
+import semillero.ecosistema.exceptions.GeocodingException;
 import semillero.ecosistema.exceptions.MaxSuppliersReachedException;
 import semillero.ecosistema.mappers.SupplierMapper;
 import semillero.ecosistema.repositories.*;
@@ -16,6 +17,7 @@ import semillero.ecosistema.repositories.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -42,6 +44,9 @@ public class SupplierService {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private GeocodingService geocodingService;
 
     private final String CLOUDINARY_FOLDER = "proveedores";
 
@@ -124,7 +129,7 @@ public class SupplierService {
      */
     public List<SupplierNameDTO> findAllAcceptedNames() throws Exception {
         try {
-            List<Supplier> suppliers = supplierRepository.findAllByStatusAndDeleted(SupplierStatus.ACEPTADO, false);
+            List<Supplier> suppliers = supplierRepository.findAllByStatusAndDeletedFalse(SupplierStatus.ACEPTADO);
             return supplierMapper.toNameDTOsList(suppliers);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
@@ -139,7 +144,7 @@ public class SupplierService {
      */
     public List<SupplierDTO> findAllAccepted() throws Exception {
         try {
-            List<Supplier> suppliers = supplierRepository.findAllByStatusAndDeleted(SupplierStatus.ACEPTADO, false);
+            List<Supplier> suppliers = supplierRepository.findAllByStatusAndDeletedFalse(SupplierStatus.ACEPTADO);
             return supplierMapper.toDTOsList(suppliers);
         } catch (Exception e) {
             throw new Exception(e.getMessage());
@@ -163,7 +168,7 @@ public class SupplierService {
             }
 
             List<Supplier> suppliers = supplierRepository
-                    .findAllByNameContainingIgnoreCaseAndStatusAndDeleted(name, SupplierStatus.ACEPTADO, false);
+                    .findAllByNameContainingIgnoreCaseAndStatusAndDeletedFalse(name, SupplierStatus.ACEPTADO);
 
             if (suppliers.isEmpty()) {
                 throw new EntityNotFoundException("Supplier not found with name: " + name);
@@ -199,7 +204,7 @@ public class SupplierService {
             }
 
             List<Supplier> suppliers = supplierRepository
-                    .findAllByCategoryAndStatusAndDeleted(category, SupplierStatus.ACEPTADO, false);
+                    .findAllByCategoryAndStatusAndDeletedFalse(category, SupplierStatus.ACEPTADO);
 
             if (suppliers.isEmpty()) {
                 throw new EntityNotFoundException("Supplier not found with category: " + categoryName);
@@ -210,6 +215,58 @@ public class SupplierService {
             throw new IllegalArgumentException(e.getMessage());
         } catch (EntityNotFoundException e) {
             throw new EntityNotFoundException(e.getMessage());
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    /**
+     * Obtiene la lista de proveedores aceptados en una ubicación específica basada en las coordenadas geográficas proporcionadas.
+     *
+     * @param latitude  La latitud de las coordenadas.
+     * @param longitude La longitud de las coordenadas.
+     * @return Lista de proveedores.
+     * @throws GeocodingException Si la obtención de información de ubicación resulta en un conjunto vacío.
+     * @throws Exception          Si ocurre un error durante el proceso de obtención.
+     */
+    public List<SupplierDTO> findAllAcceptedByLocation(Double latitude, Double longitude) throws Exception {
+        try {
+            Map<String, String> location = geocodingService.getLocation(latitude, longitude);
+            List<Supplier> suppliers;
+
+            if (!location.isEmpty()) {
+                String country = location.get("country");
+                String province = location.get("province");
+                String city = location.get("city");
+
+                suppliers = supplierRepository.findAllByStatusAndDeletedFalseAndCountryNameAndProvinceNameAndCity(
+                        SupplierStatus.ACEPTADO,
+                        country,
+                        province,
+                        city
+                );
+
+                if (suppliers.isEmpty()) {
+                    suppliers = supplierRepository.findAllByStatusAndDeletedFalseAndCountryNameAndProvinceName(
+                            SupplierStatus.ACEPTADO,
+                            country,
+                            province
+                    );
+                }
+
+                if (suppliers.isEmpty()) {
+                    suppliers = supplierRepository.findAllByStatusAndDeletedFalseAndCountryName(
+                            SupplierStatus.ACEPTADO,
+                            country
+                    );
+                }
+            } else {
+                throw new GeocodingException("Empty location");
+            }
+
+            return supplierMapper.toDTOsList(suppliers);
+        } catch (GeocodingException e) {
+            throw e;
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
