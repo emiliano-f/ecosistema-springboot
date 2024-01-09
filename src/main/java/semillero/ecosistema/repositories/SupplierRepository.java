@@ -33,11 +33,15 @@ public interface SupplierRepository extends JpaRepository<Supplier, Long> {
 
     List<Supplier> findAllByStatus(SupplierStatus status);
 
-    List<Supplier> findAllByNameContainingIgnoreCase(String name);
+    List<Supplier> findAllByStatusAndDeletedFalse(SupplierStatus status);
 
-    List<Supplier> findAllByStatusAndDeleted(SupplierStatus status, Boolean deleted);
+    List<Supplier> findAllByCategoryAndStatusAndDeletedFalse(Category category, SupplierStatus status);
 
-    List<Supplier> findAllByCategoryAndStatusAndDeleted(Category category, SupplierStatus status, Boolean deleted);
+    List<Supplier> findAllByNameContainingIgnoreCaseAndStatusAndDeletedFalse(String name, SupplierStatus status);
 
-    List<Supplier> findAllByNameContainingIgnoreCaseAndStatusAndDeleted(String name, SupplierStatus status, Boolean deleted);
+    List<Supplier> findAllByStatusAndDeletedFalseAndCountryName(SupplierStatus status, String country);
+
+    List<Supplier> findAllByStatusAndDeletedFalseAndCountryNameAndProvinceName(SupplierStatus status, String country, String province);
+
+    List<Supplier> findAllByStatusAndDeletedFalseAndCountryNameAndProvinceNameAndCity(SupplierStatus status, String country, String province, String city);
 }

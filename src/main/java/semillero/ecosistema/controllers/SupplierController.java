@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import semillero.ecosistema.dtos.supplier.SupplierFeedbackDTO;
 import semillero.ecosistema.dtos.supplier.SupplierRequestDTO;
+import semillero.ecosistema.exceptions.GeocodingException;
 import semillero.ecosistema.exceptions.MaxSuppliersReachedException;
 import semillero.ecosistema.services.SupplierService;
 
@@ -92,6 +93,23 @@ public class SupplierController {
         }
     }
 
+    @GetMapping("/searchByLocation")
+    public ResponseEntity<?> getAllAcceptedByLocation(
+            @RequestParam(name = "lat", required = false) Double latitude,
+            @RequestParam(name = "lng", required = false) Double longitude
+    ) {
+        try {
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body(service.findAllAcceptedByLocation(latitude, longitude));
+        } catch (GeocodingException e) {
+            return ResponseEntity.status(HttpStatus.NO_CONTENT)
+                    .body("{\"error\": \"Error al obtener Proveedores por ubicación.\"}");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("{\"error\": \"Error Interno del Servidor.\"}");
+        }
+    }
+
     @GetMapping("/me/{userId}")
     @PreAuthorize("hasAuthority('USUARIO_REGULAR')")
     public ResponseEntity<?> getAllByUserId(@PathVariable Long userId) {
@@ -158,7 +176,7 @@ public class SupplierController {
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(service.save(dto, images));
         } catch (MaxSuppliersReachedException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+            return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body("{\"error\": \"El Usuario ya tiene 3 Proveedores.\"}");
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
