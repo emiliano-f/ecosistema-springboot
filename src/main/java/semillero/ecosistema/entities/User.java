@@ -1,18 +1,10 @@
 package semillero.ecosistema.entities;
 
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import jakarta.persistence.Basic;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -70,6 +62,11 @@ public class User implements UserDetails {
     @NotNull(message = "Creation date cannot be null")
     @Column(name = "created_at", nullable = false)
     private LocalDate createdAt;
+
+    @PrePersist
+    private void onPersist() {
+        createdAt = LocalDate.now();
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
