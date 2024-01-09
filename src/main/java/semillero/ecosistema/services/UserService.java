@@ -10,6 +10,7 @@ import semillero.ecosistema.entities.User;
 import semillero.ecosistema.enumerations.UserRole;
 import semillero.ecosistema.repositories.UserRepository;
 
+import java.time.LocalDate;
 import java.util.Optional;
 
 @Service
@@ -47,6 +48,7 @@ public class UserService implements UserDetailsService {
         try {
             entity.setDeleted(false);
             entity.setRole(UserRole.USUARIO_REGULAR);
+            entity.setCreatedAt(LocalDate.now());
 
             return userRepository.save(entity);
         } catch (Exception e) {
@@ -129,6 +131,14 @@ public class UserService implements UserDetailsService {
             user.setDeleted(true);
 
             userRepository.save(user);
+        } catch (Exception e) {
+            throw new Exception(e.getMessage());
+        }
+    }
+
+    public Integer getCountUsersCreatedThisMonth() throws Exception {
+        try {
+            return userRepository.countUsersCreatedThisMonth();
         } catch (Exception e) {
             throw new Exception(e.getMessage());
         }
